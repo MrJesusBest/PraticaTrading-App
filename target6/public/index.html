@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TARGET 6 — TEF Canada</title>
+  <meta name="description" content="Adaptive TEF Canada training focused on Listening and Speaking for NCLC 5-6." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">T6</div>
+        <div>
+          <div class="brand-title">TARGET 6</div>
+          <div class="brand-sub">TEF CANADA</div>
+        </div>
+      </div>
+
+      <nav id="mainNav" class="nav">
+        <button class="nav-item active" data-page="dashboard">Dashboard</button>
+        <button class="nav-item" data-page="diagnostic">Diagnóstico</button>
+        <button class="nav-item" data-page="listening">Listening</button>
+        <button class="nav-item" data-page="speaking">Speaking</button>
+        <button class="nav-item" data-page="plan">Plano AI</button>
+        <button class="nav-item" data-page="progress">Progresso</button>
+        <button class="nav-item" data-page="mock">Full Mock</button>
+        <button class="nav-item" data-page="settings">Definições</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="small-label">Objetivo imediato</div>
+        <div class="goal-pill">NCLC 5 obrigatório</div>
+        <div class="goal-pill accent">Treino para NCLC 6</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">MOBILITÉ FRANCOPHONE FAST TRACK</div>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <div id="aiStatus" class="status-chip warn">AI a verificar…</div>
+          <button id="langToggle" class="ghost-btn">PT / EN</button>
+        </div>
+      </header>
+
+      <section id="page-dashboard" class="page active">
+        <div class="quick-guide">
+          <div class="guide-head"><span>GUIA RÁPIDO</span><strong>Primeira vez? Começa pelo Diagnóstico.</strong></div>
+          <div class="guide-steps">
+            <div><b>1</b><span>Abre <strong>Diagnóstico</strong>.</span></div>
+            <div><b>2</b><span>Faz 8 exercícios de Listening.</span></div>
+            <div><b>3</b><span>Faz Speaking A e B.</span></div>
+            <div><b>4</b><span>A AI cria o teu plano de 7 dias.</span></div>
+          </div>
+          <div class="guide-tip"><strong>Dica:</strong> não precisas perceber todas as palavras em francês. O objetivo é captar a informação necessária para responder.</div>
+        </div>
+        <div class="hero-card">
+          <div>
+            <div class="hero-kicker">PRIMEIRO ALVO</div>
+            <h2>Passar o francês oral com margem.</h2>
+            <p>Treino adaptativo para <strong>Compréhension orale + Expression orale</strong>. O mínimo legal é NCLC 5; esta plataforma trabalha para consistência de NCLC 6.</p>
+            <div class="hero-actions">
+              <button class="primary-btn" data-jump="diagnostic">Começar diagnóstico</button>
+              <button class="secondary-btn" data-jump="listening">Treinar agora</button>
+            </div>
+          </div>
+          <div class="target-ring-wrap">
+            <div class="target-ring"><span id="readinessScore">0</span><small>/100</small></div>
+            <div class="ring-caption">Readiness interna</div>
+          </div>
+        </div>
+
+        <div class="grid-4 metrics">
+          <div class="metric-card"><span>Listening</span><strong id="metricListening">—</strong><small>últimas tentativas</small></div>
+          <div class="metric-card"><span>Speaking</span><strong id="metricSpeaking">—</strong><small>avaliação AI</small></div>
+          <div class="metric-card"><span>Sessões</span><strong id="metricSessions">0</strong><small>guardadas localmente</small></div>
+          <div class="metric-card"><span>Vocabulário</span><strong id="metricVocab">0</strong><small>itens para rever</small></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Próxima ação</h3><span class="badge">AUTO</span></div>
+            <div id="nextAction" class="next-action">Faz o diagnóstico inicial para o sistema descobrir onde deves concentrar o estudo.</div>
+            <button id="nextActionBtn" class="secondary-btn compact">Abrir</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Regra de prontidão</h3><span class="badge neutral">NÃO OFICIAL</span></div>
+            <ul class="check-list">
+              <li>Desempenho repetido, não uma nota isolada</li>
+              <li>Listening recente estável</li>
+              <li>Speaking A e B avaliados</li>
+              <li>Fraquezas críticas sem regressão</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-diagnostic" class="page">
+        <div class="quick-guide">
+          <div class="guide-head"><span>O QUE FAZER AGORA</span><strong>Completa os passos pela ordem.</strong></div>
+          <div class="guide-steps">
+            <div><b>1</b><span>Clica <strong>Iniciar diagnóstico</strong>.</span></div>
+            <div><b>2</b><span>Em cada Listening: clica ▶, ouve e escolhe A/B/C/D.</span></div>
+            <div><b>3</b><span>Depois faz <strong>Speaking A</strong> e <strong>Speaking B</strong>.</span></div>
+            <div><b>4</b><span>No fim abre <strong>Plano AI</strong>.</span></div>
+          </div>
+          <div class="guide-tip"><strong>Importante:</strong> primeiro respondes sem tradução; depois aparece francês + português + áudio para aprenderes antes de avançar.</div>
+        </div>
+        <div class="panel diagnostic-intro">
+          <div class="panel-head"><h3>Diagnóstico inicial</h3><span class="badge">30–40 min</span></div>
+          <p>Fazemos um diagnóstico curto, não um exame oficial: <strong>8 exercícios de Listening + Speaking A + Speaking B</strong>. O objetivo é construir o teu primeiro plano adaptativo.</p>
+          <div class="diagnostic-steps">
+            <div><b>1</b><span>Listening<br><small>8 questões</small></span></div>
+            <div><b>2</b><span>Speaking A<br><small>5 min</small></span></div>
+            <div><b>3</b><span>Speaking B<br><small>10 min</small></span></div>
+            <div><b>4</b><span>Plano<br><small>7 dias</small></span></div>
+          </div>
+          <button id="startDiagnostic" class="primary-btn">Iniciar diagnóstico</button>
+        </div>
+        <div id="diagnosticWorkspace" class="panel hidden"></div>
+      </section>
+
+      <section id="page-listening" class="page">
+        <div class="quick-guide">
+          <div class="guide-head"><span>COMO FAZER LISTENING</span><strong>Ouve → identifica a informação → responde.</strong></div>
+          <div class="guide-steps">
+            <div><b>1</b><span>Clica <strong>Gerar exercício</strong>.</span></div>
+            <div><b>2</b><span>Clica ▶ para ouvir o áudio em francês.</span></div>
+            <div><b>3</b><span>Lê a pergunta e escolhe <strong>A, B, C ou D</strong>.</span></div>
+            <div><b>4</b><span>Lê a correção em português e ouve frases individuais.</span></div>
+          </div>
+          <div class="guide-tip"><strong>Progressão:</strong> começa em <strong>APRENDER</strong>. Tenta sozinho; se precisares usa Ajuda PT. Depois passa para <strong>CONSOLIDAR</strong> e finalmente <strong>EXAME</strong>. “Écoutez le document” significa <strong>“Ouve o áudio”</strong>.</div>
+        </div>
+        <div class="grid-2 top-grid">
+          <div class="panel">
+            <div class="panel-head"><h3>Treino adaptativo</h3><span id="listeningDifficultyBadge" class="badge">B1</span></div>
+            <p>O áudio toca uma vez no modo exame. No modo treino podes repetir.</p>
+            <div class="controls-row">
+              <label>Dificuldade
+                <select id="listeningDifficulty">
+                  <option>A2</option><option selected>B1</option><option>B2</option>
+                </select>
+              </label>
+              <label>Modo de áudio
+                <select id="audioMode">
+                  <option value="hq" selected>OpenAI Natural — recomendado</option>
+                  <option value="browser">Browser — fallback grátis</option>
+                </select>
+              </label>
+              <label>Nível de apoio
+                <select id="listeningSupportMode">
+                  <option value="learn" selected>APRENDER — ajuda PT disponível</option>
+                  <option value="consolidate">CONSOLIDAR — tradução só depois</option>
+                  <option value="exam">EXAME — sem ajuda antes</option>
+                </select>
+              </label>
+            </div>
+            <button id="generateListening" class="primary-btn">Gerar exercício</button>
+          </div>
+          <div class="panel calibration-card">
+            <div class="small-label">ALVOS OFICIAIS TEF / 699</div>
+            <div class="cal-row"><span>NCLC 5 Listening</span><strong>352–392</strong></div>
+            <div class="cal-row"><span>NCLC 6 Listening</span><strong>393–433</strong></div>
+            <small>A prática usa uma readiness interna; percentagem de acertos não é convertida diretamente num score TEF oficial.</small>
+          </div>
+        </div>
+
+        <div id="listeningWorkspace" class="panel exercise-panel empty-state">
+          <div class="empty-icon">▶</div>
+          <h3>Gera o primeiro exercício.</h3>
+          <p>O sistema cria material original em francês, ao estilo do formato TEF.</p>
+        </div>
+      </section>
+
+      <section id="page-speaking" class="page">
+        <div class="quick-guide">
+          <div class="guide-head"><span>COMO FAZER SPEAKING</span><strong>Lê a tarefa → grava → transcreve → recebe correção.</strong></div>
+          <div class="guide-steps">
+            <div><b>1</b><span>Escolhe <strong>Section A</strong> ou <strong>Section B</strong> e gera a tarefa.</span></div>
+            <div><b>2</b><span>Lê a <strong>Consigne</strong> — significa “instrução da tarefa”.</span></div>
+            <div><b>3</b><span>Clica <strong>Gravar</strong> e responde em francês.</span></div>
+            <div><b>4</b><span>Clica <strong>Parar → Transcrever → Avaliar com AI</strong>.</span></div>
+          </div>
+          <div class="guide-tip"><strong>Section A:</strong> faz perguntas para obter informações. <strong>Section B:</strong> apresenta argumentos e tenta convencer a outra pessoa.</div>
+        </div>
+        <div class="grid-2 top-grid">
+          <div class="panel">
+            <div class="panel-head"><h3>Expression orale</h3><span class="badge">15 min oficial</span></div>
+            <div class="segmented" id="speakingSectionSelector">
+              <button class="seg active" data-section="A">Section A · 5 min</button>
+              <button class="seg" data-section="B">Section B · 10 min</button>
+            </div>
+            <div class="controls-row">
+              <label>Dificuldade
+                <select id="speakingDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
+              </label>
+            </div>
+            <button id="generateSpeaking" class="primary-btn">Gerar tarefa</button>
+          </div>
+          <div class="panel calibration-card">
+            <div class="small-label">ALVOS OFICIAIS TEF / 699</div>
+            <div class="cal-row"><span>NCLC 5 Speaking</span><strong>387–421</strong></div>
+            <div class="cal-row"><span>NCLC 6 Speaking</span><strong>422–455</strong></div>
+            <small>A IA fornece feedback de treino. A avaliação oficial é feita pelo organismo do TEF.</small>
+          </div>
+        </div>
+
+        <div id="speakingWorkspace" class="panel exercise-panel empty-state">
+          <div class="empty-icon">●</div>
+          <h3>Cria uma tarefa de Speaking.</h3>
+          <p>Grava a tua resposta; a app transcreve e avalia estratégia, vocabulário, gramática e fluência textual.</p>
+        </div>
+      </section>
+
+      <section id="page-plan" class="page">
+        <div class="quick-guide">
+          <div class="guide-head"><span>COMO USAR O PLANO</span><strong>Faz exatamente o dia indicado pela AI.</strong></div>
+          <div class="guide-steps"><div><b>1</b><span>Primeiro conclui o Diagnóstico.</span></div><div><b>2</b><span>Clica <strong>Recalcular plano com AI</strong>.</span></div><div><b>3</b><span>Executa as tarefas do <strong>Dia 1</strong>.</span></div><div><b>4</b><span>Recalcula após novos resultados.</span></div></div>
+          <div class="guide-tip"><strong>Dica:</strong> o plano prioriza a tua fraqueza atual.</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Plano adaptativo de 7 dias</h3><span class="badge">AI COACH</span></div>
+          <p>O plano usa os teus resultados locais para decidir o que fazer a seguir. Alvo diário: 30–45 minutos.</p>
+          <button id="generatePlan" class="primary-btn">Recalcular plano com AI</button>
+        </div>
+        <div id="planWorkspace" class="plan-grid"></div>
+      </section>
+
+      <section id="page-progress" class="page">
+        <div class="quick-guide"><div class="guide-head"><span>COMO LER O PROGRESSO</span><strong>Usa esta página para saber onde estás a perder pontos.</strong></div><div class="guide-steps"><div><b>1</b><span><strong>Listening</strong> mostra acertos sem ajuda.</span></div><div><b>2</b><span><strong>Speaking</strong> mostra a média AI.</span></div><div><b>3</b><span><strong>Readiness</strong> é interna.</span></div><div><b>4</b><span>Revê vocabulário devido.</span></div></div><div class="guide-tip"><strong>Objetivo:</strong> consistência, não uma única nota alta.</div></div>
+        <div class="grid-3 metrics">
+          <div class="metric-card"><span>Listening accuracy</span><strong id="progressListening">—</strong><small>últimos 20</small></div>
+          <div class="metric-card"><span>Speaking avg</span><strong id="progressSpeaking">—</strong><small>últimos 10</small></div>
+          <div class="metric-card"><span>Readiness</span><strong id="progressReadiness">0/100</strong><small>estimativa interna</small></div>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Histórico recente</h3><button id="clearProgress" class="danger-ghost">Limpar progresso</button></div>
+            <div id="historyList" class="history-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Repetição espaçada</h3><span id="vocabDueBadge" class="badge">0 devido</span></div>
+            <div id="vocabReview" class="vocab-review"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-mock" class="page">
+        <div class="quick-guide"><div class="guide-head"><span>COMO FAZER O FULL MOCK</span><strong>Simula pressão de exame.</strong></div><div class="guide-steps"><div><b>1</b><span>Inicia o Full Mock.</span></div><div><b>2</b><span>40 Listening / 40 min.</span></div><div><b>3</b><span>Speaking A / 5 min.</span></div><div><b>4</b><span>Speaking B / 10 min.</span></div></div><div class="guide-tip"><strong>Dica:</strong> não pares para traduzir tudo durante o mock.</div></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Full Mock — TEF Oral Fast Track</h3><span class="badge">OPERACIONAL</span></div>
+          <h2>40 Listening · 40 min + Speaking A · 5 min + Speaking B · 10 min</h2>
+          <p>Modo pressão: Listening sem replay e sem feedback até ao fim. Depois fazes Speaking com um examinador AI que responde em francês durante a interação.</p>
+          <div id="mockGate" class="mock-rule"></div>
+          <div class="hero-actions">
+            <button id="startFullMock" class="primary-btn">Iniciar Full Mock</button>
+            <button id="resetMock" class="secondary-btn">Reiniciar mock</button>
+          </div>
+          <small>Os 40 itens são material original de treino. O resultado bruto não é convertido diretamente num score TEF oficial.</small>
+        </div>
+        <div id="mockWorkspace" class="panel exercise-panel empty-state">
+          <div class="empty-icon">40</div><h3>Mock completo pronto.</h3><p>Quando iniciares, a app prepara as 40 questões e ativa o relógio de 40 minutos.</p>
+        </div>
+      </section>
+
+      <section id="page-settings" class="page">
+        <div class="quick-guide"><div class="guide-head"><span>DEFINIÇÕES</span><strong>Normalmente não precisas mexer aqui.</strong></div><div class="guide-steps"><div><b>1</b><span>Confirma <strong>AI ligado</strong>.</span></div><div><b>2</b><span>Se falhar, testa a ligação.</span></div><div><b>3</b><span>Progresso fica no browser.</span></div><div><b>4</b><span>Não apagues enquanto estudas.</span></div></div></div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>AI</h3><span id="settingsAIStatus" class="badge neutral">—</span></div>
+            <p>A chave OpenAI fica apenas no servidor local, em <code>.env.local</code>. Nunca é guardada no browser.</p>
+            <div id="modelInfo" class="settings-list"></div>
+            <button id="testAI" class="secondary-btn compact">Testar ligação AI</button>
+            <div id="testAIResult" class="small-label"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Privacidade</h3><span class="badge neutral">LOCAL</span></div>
+            <ul class="check-list">
+              <li>Progresso: localStorage no teu browser</li>
+              <li>Chave API: ficheiro local do servidor</li>
+              <li>Pedidos AI configurados com <code>store:false</code></li>
+              <li>Áudio só é enviado quando pedes transcrição</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Fase 2 — PR</h3><span class="badge neutral">DEPOIS</span></div>
+          <p>Reading + Writing ficam fora do Fast Track inicial. Quando o alvo oral estiver estabilizado, a plataforma pode expandir para <strong>NCLC 7 nas quatro competências</strong>.</p>
+        </div>
+      </section>
+
+      <footer class="footer-note">Ferramenta de preparação independente. Não é afiliada à CCI Paris Île-de-France, TEF ou IRCC.</footer>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

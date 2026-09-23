@@ -250,6 +250,30 @@ Return JSON ONLY:
 }`;
 }
 
+function speakingDrillEvaluationPrompt(payload = {}) {
+  const section = String(payload.section || 'A') === 'B' ? 'B' : 'A';
+  const modelFr = String(payload.modelFr || '').trim();
+  const learnerTranscript = String(payload.learnerTranscript || '').trim();
+  const skillId = String(payload.skillId || '').trim();
+  return `You are a patient but precise French speaking coach preparing a beginner for TEF Canada.
+This is a MICRO-DRILL, not an official exam score. Evaluate only what can be inferred from the transcript; do not claim to assess pronunciation.
+Section: ${section}
+Skill: ${skillId}
+Target model: ${modelFr}
+Learner transcript: ${learnerTranscript}
+
+Goal: decide whether the learner communicated the intended sentence/structure well enough to move on. Do NOT require an exact word-for-word match. Accept small article, agreement, accent, or spelling/transcription errors when meaning and target structure are clear. If the structure is materially wrong or meaning is unclear, require a retry.
+Return JSON ONLY:
+{
+  "achieved": true,
+  "score": 0,
+  "feedbackPt": "short, concrete feedback in European Portuguese",
+  "correctedFr": "the best corrected natural French sentence",
+  "keyPointPt": "one exact thing to remember next time"
+}
+score must be 0-100. Use achieved=true only when score is at least 70. Keep feedback encouraging but factual and concise.`;
+}
+
 function speakingEvaluationPrompt(payload) {
   const { section, task, transcript, durationSeconds = 0 } = payload;
   return `You are an expert practice evaluator for TEF Canada oral expression. This is a TRAINING ESTIMATE, never an official TEF score.
@@ -428,6 +452,18 @@ async function handleApi(req, res, pathname) {
       const text = await openAIResponse(speakingPrompt(body), ROUTINE_MODEL);
       const task = extractJson(text);
       return sendJson(res, 200, { task });
+    }
+
+    if (pathname === '/api/evaluate-speaking-drill') {
+      const learnerTranscript = String(body.learnerTranscript || '').trim();
+      const modelFr = String(body.modelFr || '').trim();
+      if (!learnerTranscript || !modelFr) throw new Error('Micro-drill requires model and learner transcript');
+      const text = await openAIResponse(speakingDrillEvaluationPrompt(body), ROUTINE_MODEL);
+      const evaluation = extractJson(text);
+      evaluation.score = Math.max(0, Math.min(100, Number(evaluation.score) || 0));
+      evaluation.achieved = Boolean(evaluation.achieved) && evaluation.score >= 70;
+      if (!evaluation.correctedFr) evaluation.correctedFr = modelFr;
+      return sendJson(res, 200, { evaluation });
     }
 
     if (pathname === '/api/examiner-turn') {

@@ -12,7 +12,7 @@ const initialState = () => ({
   history: [],
   mockRuns: [],
   plan: null,
-  diagnostic: { active:false, listeningDone:false, speakingA:false, speakingB:false, completed:false, correct:0, total:0 },
+  diagnostic: { active:false, listeningDone:false, speakingA:false, speakingB:false, speakingBaseline:false, completed:false, correct:0, total:0 },
   settings: { lang:'pt' }
 });
 
@@ -377,7 +377,7 @@ function bandLabel(b){return ({BELOW_NCLC5:'Abaixo da zona NCLC 5',NCLC5_RANGE:'
 // Diagnostic flow: 8 adaptive listening items, then speaking A and B.
 $('#startDiagnostic').addEventListener('click',startDiagnostic);
 function startDiagnostic(){
-  state.diagnostic={active:true,listeningDone:false,speakingA:false,speakingB:false,completed:false,correct:0,total:0,startedAt:new Date().toISOString()};saveState();
+  state.diagnostic={active:true,listeningDone:false,speakingA:false,speakingB:false,speakingBaseline:false,completed:false,correct:0,total:0,startedAt:new Date().toISOString()};saveState();
   diagnosticRuntime={index:0,correct:0}; $('#diagnosticWorkspace').classList.remove('hidden'); runNextDiagnosticListening();
 }
 async function runNextDiagnosticListening(){
@@ -385,8 +385,8 @@ async function runNextDiagnosticListening(){
   if(!diagnosticRuntime)diagnosticRuntime={index:state.diagnostic.total||0,correct:state.diagnostic.correct||0};
   if(diagnosticRuntime.index>=8){
     state.diagnostic.listeningDone=true;state.diagnostic.correct=diagnosticRuntime.correct;state.diagnostic.total=8;saveState();
-    w.innerHTML=`<div class="panel-head"><h3>Listening concluído</h3><span class="badge">${diagnosticRuntime.correct}/8</span></div><p>Agora precisamos das duas secções de Speaking. A avaliação é feita depois da gravação.</p><div class="hero-actions"><button id="diagSpeakA" class="primary-btn">Fazer Speaking A</button><button id="diagSpeakB" class="secondary-btn">Fazer Speaking B</button></div>`;
-    $('#diagSpeakA').onclick=()=>startDiagnosticSpeaking('A');$('#diagSpeakB').onclick=()=>startDiagnosticSpeaking('B');return;
+    w.innerHTML=`<div class="panel-head"><h3>Listening concluído</h3><span class="badge">${diagnosticRuntime.correct}/8</span></div><p>Agora vamos medir a tua base oral <strong>sem te obrigar a fazer 5 ou 10 minutos de Speaking</strong>. Vais completar 5 micro-drills: ouvir, repetir, corrigir e consolidar.</p><div class="hero-actions"><button id="diagSpeakProgressive" class="primary-btn">Começar nivelamento oral</button></div>`;
+    $('#diagSpeakProgressive').onclick=()=>{ if(window.startProgressiveDiagnostic) window.startProgressiveDiagnostic(); else startDiagnosticSpeaking('A'); };return;
   }
   const idx=diagnosticRuntime.index; const levels=['A2','B1','B1','B1','B2','B1','B2','B2'];
   w.innerHTML=`<div class="panel-head"><h3>Listening ${idx+1}/8</h3><span class="badge">Diagnóstico</span></div><div id="diagItem"><p>A preparar questão…</p></div>`;
@@ -421,7 +421,7 @@ $('#generatePlan').addEventListener('click',generatePlan);
 async function generatePlan(){
   const btn=$('#generatePlan'); setBusy(btn,true,'A calcular plano…');
   try{
-    const progress={listeningAccuracy:listeningAccuracy(),listeningAttempts:state.listeningAttempts.slice(-20),speakingAverage:speakingAverage(),speakingAttempts:state.speakingAttempts.slice(-10),vocabDue:state.vocab.slice(-30),diagnostic:state.diagnostic};
+    const progress={listeningAccuracy:listeningAccuracy(),listeningAttempts:state.listeningAttempts.slice(-20),speakingAverage:speakingAverage(),speakingAttempts:state.speakingAttempts.slice(-10),speakingTraining:state.speakingTraining||null,vocabDue:state.vocab.slice(-30),diagnostic:state.diagnostic};
     const {plan}=await api('/api/coach-plan',{progress}); state.plan={...plan,generatedAt:new Date().toISOString()};saveState();renderPlan();toast('Plano de 7 dias atualizado.');
   }catch(e){toast(friendlyError(e),'error')}
   finally{setBusy(btn,false)}

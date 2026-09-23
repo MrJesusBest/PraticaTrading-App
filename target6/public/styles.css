@@ -23,3 +23,38 @@ button,select,textarea{font:inherit}.app-shell{display:grid;grid-template-column
 .study-review{margin-top:20px}.assisted-note{padding:9px 11px;border:1px solid #6a5c2e;border-radius:9px;background:#2b2514;color:#e8d58d;margin-bottom:12px}.review-section{margin-top:16px;padding-top:13px;border-top:1px solid var(--line)}.review-title{font-size:11px;letter-spacing:.12em;font-weight:900;color:var(--accent);margin-bottom:9px}
 .turn-review{display:grid;gap:8px;margin-top:10px}.turn-review-row,.study-line,.answer-study{display:grid;grid-template-columns:44px minmax(0,1fr);gap:9px;align-items:start;padding:9px;border:1px solid var(--line);border-radius:10px;background:#0a1713}.turn-review-row small,.study-line small,.answer-study small{display:block;color:var(--muted);margin-top:3px}.answer-study-list{display:grid;gap:8px}.answer-correct{border-color:#2f8b69;background:#102c23}.diagnostic-next{margin-top:14px;width:100%}
 @media(max-width:900px){.guide-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.guide-steps{grid-template-columns:1fr}.guide-head{align-items:flex-start;flex-direction:column}.choice-row{grid-template-columns:minmax(0,1fr) 44px}.turn-review-row,.study-line,.answer-study{grid-template-columns:42px minmax(0,1fr)}}
+
+/* Progressive Speaking */
+.speaking-path-panel{margin-bottom:16px;background:linear-gradient(145deg,#10271f,#0c1b17)}
+.path-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:14px}
+.path-top>div>strong{display:block;font-size:24px;margin:3px 0}
+.path-top p{margin:3px 0 0!important;max-width:760px}
+.mastery-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:12px 0 6px;font-size:13px;color:var(--muted)}
+.mastery-row strong{color:var(--text)}
+.speaking-mode-panel{margin-bottom:16px}
+.speaking-modes{flex-wrap:wrap;margin:8px 0 4px}
+.speaking-modes .seg{min-width:150px;text-align:center}
+.seg:disabled{opacity:.42;cursor:not-allowed;background:#0a1512;color:#65766f}
+.phrase-card{margin:14px 0;padding:20px;border:1px solid #315f50;border-radius:14px;background:linear-gradient(145deg,#0f241d,#0a1713)}
+.phrase-fr{font-size:28px;font-weight:900;line-height:1.25;margin-bottom:8px}
+.phrase-pt{font-size:16px;color:var(--accent2);margin-bottom:8px}
+.phrase-pron{padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.phrase-pron span{font-weight:800;color:var(--text)}
+.practice-loop{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.practice-loop>div{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0a1713;color:var(--muted);font-size:13px}
+.practice-loop b{flex:0 0 25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#173c30;color:var(--accent2)}
+.micro-transcript{min-height:92px;margin-top:12px}
+.guided-scenario{display:grid;gap:4px;margin:12px 0;padding:14px;border:1px solid #315f50;border-radius:12px;background:#0d201a}
+.guided-scenario small{color:var(--muted)}
+.guided-help{display:grid;gap:6px;margin:12px 0;padding:14px;border:1px solid #6a5c2e;border-radius:12px;background:#211d11}
+.guided-help>span{font-size:10px;letter-spacing:.12em;font-weight:900;color:var(--warn)}
+.guided-help strong{font-size:19px}
+.guided-help small{color:#d8cfaa}
+.guided-help.reduced{border-color:var(--line);background:#0a1713}
+.feedback-pass{border-color:#2f8b69;background:#102c23}
+.feedback-retry{border-color:#7c543c;background:#291b12}
+.correction-line{display:grid;grid-template-columns:auto minmax(0,1fr) 44px;gap:10px;align-items:center;margin:12px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0a1713}
+.correction-line span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.correction-line strong{font-size:17px}
+.guided-complete{text-align:center;display:grid;place-items:center;align-content:center;min-height:240px}
+@media(max-width:760px){.path-top{flex-direction:column}.practice-loop{grid-template-columns:repeat(2,minmax(0,1fr))}.phrase-fr{font-size:22px}.correction-line{grid-template-columns:1fr 44px}.correction-line span{grid-column:1/-1}}

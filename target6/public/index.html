@@ -54,7 +54,7 @@
           <div class="guide-steps">
             <div><b>1</b><span>Abre <strong>Diagnóstico</strong>.</span></div>
             <div><b>2</b><span>Faz 8 exercícios de Listening.</span></div>
-            <div><b>3</b><span>Faz Speaking A e B.</span></div>
+            <div><b>3</b><span>Faz o <strong>nivelamento oral progressivo</strong>.</span></div>
             <div><b>4</b><span>A AI cria o teu plano de 7 dias.</span></div>
           </div>
           <div class="guide-tip"><strong>Dica:</strong> não precisas perceber todas as palavras em francês. O objetivo é captar a informação necessária para responder.</div>
@@ -106,19 +106,19 @@
           <div class="guide-steps">
             <div><b>1</b><span>Clica <strong>Iniciar diagnóstico</strong>.</span></div>
             <div><b>2</b><span>Em cada Listening: clica ▶, ouve e escolhe A/B/C/D.</span></div>
-            <div><b>3</b><span>Depois faz <strong>Speaking A</strong> e <strong>Speaking B</strong>.</span></div>
+            <div><b>3</b><span>Depois faz o <strong>nivelamento oral progressivo</strong>: micro-frases, sem relógio.</span></div>
             <div><b>4</b><span>No fim abre <strong>Plano AI</strong>.</span></div>
           </div>
           <div class="guide-tip"><strong>Importante:</strong> primeiro respondes sem tradução; depois aparece francês + português + áudio para aprenderes antes de avançar.</div>
         </div>
         <div class="panel diagnostic-intro">
           <div class="panel-head"><h3>Diagnóstico inicial</h3><span class="badge">30–40 min</span></div>
-          <p>Fazemos um diagnóstico curto, não um exame oficial: <strong>8 exercícios de Listening + Speaking A + Speaking B</strong>. O objetivo é construir o teu primeiro plano adaptativo.</p>
+          <p>Fazemos um diagnóstico curto, não um exame oficial: <strong>8 exercícios de Listening + nivelamento oral progressivo</strong>. Se ainda estás no início, não te obrigamos a falar 5 ou 10 minutos. O objetivo é descobrir a tua base e construir o primeiro plano adaptativo.</p>
           <div class="diagnostic-steps">
             <div><b>1</b><span>Listening<br><small>8 questões</small></span></div>
-            <div><b>2</b><span>Speaking A<br><small>5 min</small></span></div>
-            <div><b>3</b><span>Speaking B<br><small>10 min</small></span></div>
-            <div><b>4</b><span>Plano<br><small>7 dias</small></span></div>
+            <div><b>2</b><span>Speaking Base<br><small>5 micro-drills</small></span></div>
+            <div><b>3</b><span>Plano AI<br><small>7 dias</small></span></div>
+            <div><b>4</b><span>TEF completo<br><small>mais tarde</small></span></div>
           </div>
           <button id="startDiagnostic" class="primary-btn">Iniciar diagnóstico</button>
         </div>
@@ -179,41 +179,58 @@
 
       <section id="page-speaking" class="page">
         <div class="quick-guide">
-          <div class="guide-head"><span>COMO FAZER SPEAKING</span><strong>Lê a tarefa → grava → transcreve → recebe correção.</strong></div>
+          <div class="guide-head"><span>SPEAKING PROGRESSIVO</span><strong>Primeiro aprendes a falar. Só depois fazemos o exame completo.</strong></div>
           <div class="guide-steps">
-            <div><b>1</b><span>Escolhe <strong>Section A</strong> ou <strong>Section B</strong> e gera a tarefa.</span></div>
-            <div><b>2</b><span>Lê a <strong>Consigne</strong> — significa “instrução da tarefa”.</span></div>
-            <div><b>3</b><span>Clica <strong>Gravar</strong> e responde em francês.</span></div>
-            <div><b>4</b><span>Clica <strong>Parar → Transcrever → Avaliar com AI</strong>.</span></div>
+            <div><b>1</b><span><strong>APRENDER:</strong> ouve e repete uma frase de cada vez.</span></div>
+            <div><b>2</b><span><strong>CORRIGIR:</strong> a AI identifica o erro e obriga a repetir.</span></div>
+            <div><b>3</b><span><strong>TREINO GUIADO:</strong> pequenas interações com cada vez menos ajuda.</span></div>
+            <div><b>4</b><span><strong>SIMULAÇÃO TEF:</strong> só quando a base estiver consistente.</span></div>
           </div>
-          <div class="guide-tip"><strong>Section A:</strong> faz perguntas para obter informações. <strong>Section B:</strong> apresenta argumentos e tenta convencer a outra pessoa.</div>
+          <div class="guide-tip"><strong>Regra:</strong> não saltamos uma fraqueza. O sistema volta às estruturas erradas em 1, 3, 7, 14 e 30 dias conforme fores dominando.</div>
         </div>
+
+        <div id="speakingPathOverview" class="panel speaking-path-panel"></div>
+
+        <div class="panel speaking-mode-panel">
+          <div class="panel-head"><h3>Como queres treinar agora?</h3><span class="badge">PROGRESSÃO AUTOMÁTICA</span></div>
+          <div class="segmented speaking-modes" id="speakingModeSelector">
+            <button class="seg active" data-mode="learn">APRENDER</button>
+            <button class="seg" data-mode="guided">TREINO GUIADO</button>
+            <button class="seg" data-mode="exam">SIMULAÇÃO TEF</button>
+          </div>
+          <div id="speakingModeDescription" class="inline-help"><strong>APRENDER:</strong> uma frase de cada vez. Ouve → repete → corrige → repete até dominar.</div>
+        </div>
+
         <div class="grid-2 top-grid">
           <div class="panel">
-            <div class="panel-head"><h3>Expression orale</h3><span class="badge">15 min oficial</span></div>
+            <div class="panel-head"><h3>Expression orale</h3><span class="badge">ALVO: NCLC 6</span></div>
+            <p>Começamos pela <strong>Section A</strong>, porque primeiro tens de dominar perguntas simples. A <strong>Section B</strong> abre quando a base estiver suficientemente consistente.</p>
             <div class="segmented" id="speakingSectionSelector">
-              <button class="seg active" data-section="A">Section A · 5 min</button>
-              <button class="seg" data-section="B">Section B · 10 min</button>
+              <button class="seg active" data-section="A">Section A · perguntas</button>
+              <button class="seg" data-section="B">Section B · mais tarde</button>
             </div>
-            <div class="controls-row">
-              <label>Dificuldade
+            <div id="speakingExamControls" class="controls-row hidden">
+              <label>Dificuldade da simulação
                 <select id="speakingDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
               </label>
             </div>
-            <button id="generateSpeaking" class="primary-btn">Gerar tarefa</button>
+            <div class="hero-actions">
+              <button id="startSpeakingTraining" class="primary-btn">Começar micro-treino</button>
+              <button id="generateSpeaking" class="primary-btn hidden">Gerar tarefa</button>
+            </div>
           </div>
           <div class="panel calibration-card">
             <div class="small-label">ALVOS OFICIAIS TEF / 699</div>
             <div class="cal-row"><span>NCLC 5 Speaking</span><strong>387–421</strong></div>
             <div class="cal-row"><span>NCLC 6 Speaking</span><strong>422–455</strong></div>
-            <small>A IA fornece feedback de treino. A avaliação oficial é feita pelo organismo do TEF.</small>
+            <small>A AI fornece feedback de treino. A avaliação oficial é feita pelo organismo do TEF. Os micro-drills servem para construir a competência antes da simulação completa.</small>
           </div>
         </div>
 
         <div id="speakingWorkspace" class="panel exercise-panel empty-state">
-          <div class="empty-icon">●</div>
-          <h3>Cria uma tarefa de Speaking.</h3>
-          <p>Grava a tua resposta; a app transcreve e avalia estratégia, vocabulário, gramática e fluência textual.</p>
+          <div class="empty-icon">1→2→3</div>
+          <h3>Começa pela base.</h3>
+          <p>Sem relógio e sem pressão: ouvir → repetir → corrigir → consolidar. O formato completo aparece mais tarde.</p>
         </div>
       </section>
 
@@ -299,5 +316,6 @@
   </div>
   <div id="toast" class="toast hidden"></div>
   <script src="/app.js"></script>
+  <script src="/speaking-progressive.js"></script>
 </body>
 </html>

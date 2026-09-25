@@ -50,7 +50,7 @@
 
       <section id="page-dashboard" class="page active">
         <div class="quick-guide">
-          <div class="guide-head"><span>GUIA RÁPIDO</span><strong>Primeira vez? Começa pelo Diagnóstico.</strong></div>
+          <div class="guide-head"><span>GUIA RÁPIDO</span><strong id="dashboardGuideTitle">O sistema guarda o teu progresso e diz-te exatamente o próximo passo.</strong></div>
           <div class="guide-steps">
             <div><b>1</b><span>Abre <strong>Diagnóstico</strong>.</span></div>
             <div><b>2</b><span>Faz 8 exercícios de Listening.</span></div>
@@ -65,7 +65,7 @@
             <h2>Passar o francês oral com margem.</h2>
             <p>Treino adaptativo para <strong>Compréhension orale + Expression orale</strong>. O mínimo legal é NCLC 5; esta plataforma trabalha para consistência de NCLC 6.</p>
             <div class="hero-actions">
-              <button class="primary-btn" data-jump="diagnostic">Começar diagnóstico</button>
+              <button id="dashboardPrimaryAction" class="primary-btn">Continuar</button>
               <button class="secondary-btn" data-jump="listening">Treinar agora</button>
             </div>
           </div>
@@ -73,6 +73,23 @@
             <div class="target-ring"><span id="readinessScore">0</span><small>/100</small></div>
             <div class="ring-caption">Readiness interna</div>
           </div>
+        </div>
+
+        <div id="dailyCoachCard" class="panel coach-card">
+          <div class="panel-head">
+            <div>
+              <div class="small-label">AI COACH · HOJE</div>
+              <h3 id="coachHeadline">A preparar o teu próximo passo…</h3>
+            </div>
+            <span id="examCountdownBadge" class="badge neutral">DATA DO EXAME POR DEFINIR</span>
+          </div>
+          <p id="coachSummary">O teu progresso fica guardado neste browser. Não precisas repetir o diagnóstico depois de o concluir.</p>
+          <div id="coachTasks" class="coach-tasks"></div>
+          <div class="hero-actions">
+            <button id="coachContinueBtn" class="primary-btn">Continuar agora</button>
+            <button id="coachRefreshBtn" class="secondary-btn">Atualizar conselho com AI</button>
+          </div>
+          <small id="coachMeta">A AI só é chamada quando o conselho precisa de ser atualizado.</small>
         </div>
 
         <div class="grid-4 metrics">
@@ -121,6 +138,7 @@
             <div><b>4</b><span>TEF completo<br><small>mais tarde</small></span></div>
           </div>
           <button id="startDiagnostic" class="primary-btn">Iniciar diagnóstico</button>
+          <p id="diagnosticStatusNote" class="diagnostic-status-note"></p>
         </div>
         <div id="diagnosticWorkspace" class="panel hidden"></div>
       </section>
@@ -287,6 +305,16 @@
 
       <section id="page-settings" class="page">
         <div class="quick-guide"><div class="guide-head"><span>DEFINIÇÕES</span><strong>Normalmente não precisas mexer aqui.</strong></div><div class="guide-steps"><div><b>1</b><span>Confirma <strong>AI ligado</strong>.</span></div><div><b>2</b><span>Se falhar, testa a ligação.</span></div><div><b>3</b><span>Progresso fica no browser.</span></div><div><b>4</b><span>Não apagues enquanto estudas.</span></div></div></div>
+        <div class="panel exam-date-panel">
+          <div class="panel-head"><h3>Data do exame TEF</h3><span class="badge">PLANO DE 30 DIAS</span></div>
+          <p>Define a data real para o AI Coach ajustar intensidade, revisões e mocks ao tempo que falta.</p>
+          <div class="exam-date-row">
+            <input id="examDateInput" type="date" />
+            <button id="saveExamDate" class="primary-btn">Guardar data</button>
+          </div>
+          <small id="examDateStatus">Se ainda não tens a data exata, deixa em branco. O plano continua a funcionar.</small>
+        </div>
+
         <div class="grid-2">
           <div class="panel">
             <div class="panel-head"><h3>AI</h3><span id="settingsAIStatus" class="badge neutral">—</span></div>

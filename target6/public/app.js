@@ -421,7 +421,13 @@ $('#generatePlan').addEventListener('click',generatePlan);
 async function generatePlan(){
   const btn=$('#generatePlan'); setBusy(btn,true,'A calcular plano…');
   try{
-    const progress={listeningAccuracy:listeningAccuracy(),listeningAttempts:state.listeningAttempts.slice(-20),speakingAverage:speakingAverage(),speakingAttempts:state.speakingAttempts.slice(-10),speakingTraining:state.speakingTraining||null,vocabDue:state.vocab.slice(-30),diagnostic:state.diagnostic};
+    const rawExamDate=String(state.settings?.examDate||'').trim();
+    let daysUntilExam=null;
+    if(rawExamDate){
+      const target=new Date(rawExamDate+'T12:00:00'); const now=new Date(); now.setHours(12,0,0,0);
+      if(!Number.isNaN(target.getTime())) daysUntilExam=Math.ceil((target-now)/86400000);
+    }
+    const progress={listeningAccuracy:listeningAccuracy(),listeningAttempts:state.listeningAttempts.slice(-20),speakingAverage:speakingAverage(),speakingAttempts:state.speakingAttempts.slice(-10),speakingTraining:state.speakingTraining||null,vocabDue:state.vocab.slice(-30),diagnostic:state.diagnostic,examDate:rawExamDate,daysUntilExam};
     const {plan}=await api('/api/coach-plan',{progress}); state.plan={...plan,generatedAt:new Date().toISOString()};saveState();renderPlan();toast('Plano de 7 dias atualizado.');
   }catch(e){toast(friendlyError(e),'error')}
   finally{setBusy(btn,false)}

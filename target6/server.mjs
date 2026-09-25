@@ -203,7 +203,7 @@ async function transcribeAudio(dataUrl) {
 }
 
 function listeningPrompt({ difficulty = 'B1', focus = 'general' }) {
-  return `You create ORIGINAL TEF Canada-style French listening practice. Do not reproduce or paraphrase copyrighted official test questions.
+  return `You create ORIGINAL TEF Canada - 2 Modules French listening practice. Do not reproduce or paraphrase copyrighted official test questions.
 Target learner level: ${difficulty}. Focus: ${focus}.
 Create ONE realistic listening item inspired only by the official format: short everyday spoken French, one multiple-choice question, four choices, one correct answer.
 The audio must sound like real life, not a narrator reading a transcript. Choose either:
@@ -276,7 +276,7 @@ score must be 0-100. Use achieved=true only when score is at least 70. Keep feed
 
 function speakingEvaluationPrompt(payload) {
   const { section, task, transcript, durationSeconds = 0 } = payload;
-  return `You are an expert practice evaluator for TEF Canada oral expression. This is a TRAINING ESTIMATE, never an official TEF score.
+  return `You are an expert practice evaluator for TEF Canada - 2 Modules oral expression for Francophone Mobility. This is a TRAINING ESTIMATE, never an official TEF score.
 Official task structure: Section A = obtain information; Section B = argue to convince. Evaluate the candidate from the supplied transcript and duration. Do NOT pretend to assess pronunciation from text alone.
 Section: ${section}
 Task: ${JSON.stringify(task)}
@@ -301,7 +301,7 @@ Use European Portuguese for feedback fields. Keep modelAnswerFr in French.`;
 }
 
 function coachPlanPrompt(progress) {
-  return `You are the adaptive coach for a TEF Canada learner whose immediate goal is NCLC 5+ in Listening and Speaking, with a training target of NCLC 6 for safety margin.
+  return `You are the adaptive coach for a TEF Canada - 2 Modules learner preparing specifically for IRCC Francophone Mobility. The only current exam competencies in scope are Listening and Speaking. The IRCC minimum target is NCLC 5 in both, while the training target is NCLC 6 for safety margin. Do not assign Reading or Writing tasks.
 Use the progress JSON below. Build a practical study plan for the NEXT 7 DAYS, 30-45 minutes per day. Prioritize weaknesses and spaced repetition. Do not claim guaranteed exam outcomes.
 Progress: ${JSON.stringify(progress)}
 Return JSON ONLY:

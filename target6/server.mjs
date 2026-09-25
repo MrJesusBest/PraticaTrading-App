@@ -301,14 +301,22 @@ Use European Portuguese for feedback fields. Keep modelAnswerFr in French.`;
 }
 
 function coachPlanPrompt(progress) {
-  return `You are the adaptive coach for a TEF Canada learner whose immediate goal is NCLC 5+ in Listening and Speaking, with a training target of NCLC 6 for safety margin.
-Use the progress JSON below. Build a practical study plan for the NEXT 7 DAYS, 30-45 minutes per day. Prioritize weaknesses and spaced repetition. Do not claim guaranteed exam outcomes.
+  const days = Number(progress?.daysUntilExam);
+  const urgency = Number.isFinite(days) && days >= 0 && days <= 35
+    ? 'The exam is within 35 days. Build an intensive but sustainable plan of 60-90 minutes per day, split into short blocks when useful.'
+    : 'Use 45-60 minutes per day unless the learner data clearly supports a lighter session.';
+  return `You are the adaptive coach for TARGET 6, a TEF Canada preparation app locked to the 2-module exam used for Francophone Mobility.
+NON-NEGOTIABLE SCOPE: Listening (Compréhension orale) + Speaking (Expression orale) ONLY. Never assign Reading or Writing.
+Official eligibility goal for Francophone Mobility: NCLC 5+ in Listening and Speaking. Training target: NCLC 6 for safety margin.
+Current NCLC 6 score targets on the /699 TEF scale: Listening >=393 and Speaking >=422.
+${urgency}
+Use the progress JSON below. Build a practical study plan for the NEXT 7 DAYS. Prioritize the weaker oral skill, spaced repetition, correction loops, and periodic exam-format practice. Do not claim guaranteed exam outcomes and do not invent an official score from internal readiness.
 Progress: ${JSON.stringify(progress)}
 Return JSON ONLY:
 {
   "summaryPt": "...",
   "priority": "listening|speaking|balanced",
-  "days": [{"day":1,"minutes":35,"tasks":["...","..."],"successRule":"..."}],
+  "days": [{"day":1,"minutes":60,"tasks":["...","..."],"successRule":"..."}],
   "readinessMessagePt": "..."
 }
 Exactly 7 day objects. European Portuguese except exam-specific French drill phrases where useful.`;

@@ -215,20 +215,22 @@ Return JSON ONLY with this exact shape:
 {
   "title": "short French title",
   "audioType": "dialogue|monologue",
-  "turns": [{"speaker":"woman|man|neutral","text":"exact French words to speak","pt":"natural European Portuguese translation of that turn"}],
+  "turns": [{"speaker":"woman|man|neutral","text":"exact French words to speak","pt":"natural European Portuguese translation of that turn","pronunciationPt":"easy European Portuguese sound cue for this French turn; no IPA"}],
   "script": "plain full transcript for fallback only",
   "scriptPt": "natural European Portuguese translation of the full spoken content",
   "question": "French question",
   "questionPt": "European Portuguese translation of the question",
+  "questionPronunciationPt": "easy European Portuguese sound cue for the French question; no IPA",
   "choices": ["A", "B", "C", "D"],
   "choicesPt": ["European Portuguese translation of A","translation of B","translation of C","translation of D"],
+  "choicesPronunciationPt": ["sound cue for A","sound cue for B","sound cue for C","sound cue for D"],
   "answerIndex": 0,
   "difficulty": "${difficulty}",
   "skillTag": "detail|purpose|inference|number_time|attitude",
   "explanationPt": "brief explanation in European Portuguese",
   "vocab": [{"fr":"word or phrase","pt":"Portuguese meaning"}]
 }
-answerIndex must be an integer 0-3. Keep vocab to 2-4 useful items.`;
+answerIndex must be an integer 0-3. Keep vocab to 2-4 useful items. Keep pronunciationPt fields practical for a Portuguese-speaking beginner: syllable separation is allowed, avoid IPA characters, and preserve important French features such as nasal vowels, liaison and silent final consonants as closely as possible.`;
 }
 
 function speakingPrompt({ section = 'A', difficulty = 'B1' }) {
@@ -338,13 +340,15 @@ Return JSON ONLY:
     {
       "title":"...",
       "audioType":"dialogue|monologue",
-      "turns":[{"speaker":"woman|man|neutral","text":"...","pt":"European Portuguese translation"}],
+      "turns":[{"speaker":"woman|man|neutral","text":"...","pt":"European Portuguese translation","pronunciationPt":"easy European Portuguese sound cue for this French turn; no IPA"}],
       "script":"plain full transcript for fallback",
       "scriptPt":"European Portuguese translation of full spoken content",
       "question":"...",
       "questionPt":"European Portuguese translation of the question",
+      "questionPronunciationPt":"easy European Portuguese sound cue for the French question; no IPA",
       "choices":["...","...","...","..."],
       "choicesPt":["...","...","...","..."],
+      "choicesPronunciationPt":["...","...","...","..."],
       "answerIndex":0,
       "difficulty":"A2|B1|B2",
       "skillTag":"detail|purpose|inference|number_time|attitude",
@@ -353,7 +357,7 @@ Return JSON ONLY:
     }
   ]
 }
-Return exactly ${safeCount} items.`;
+Return exactly ${safeCount} items. Keep pronunciationPt fields practical for a Portuguese-speaking beginner: syllable separation is allowed, avoid IPA characters, and preserve important French features such as nasal vowels, liaison and silent final consonants as closely as possible.`;
 }
 
 function examinerTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '' }) {

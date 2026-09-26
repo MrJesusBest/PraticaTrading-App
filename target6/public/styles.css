@@ -82,3 +82,14 @@ button,select,textarea{font:inherit}.app-shell{display:grid;grid-template-column
 .translation-cue{display:block;margin-top:7px;color:var(--muted);font-size:13px}
 .pronunciation-stack,.correction-stack{display:grid;gap:4px;min-width:0}
 .pronunciation-stack strong,.correction-stack strong{font-size:17px;line-height:1.35}
+
+
+/* Speaking progression gates */
+.guided-gate{display:flex;justify-content:space-between;align-items:center;margin:7px 0 14px;padding:9px 11px;border:1px dashed var(--line);border-radius:9px;background:#0a1512;color:var(--muted);font-size:12px}
+.guided-gate strong{color:var(--accent2);font-size:14px}
+.next-gate-card{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:16px;padding:14px;border:1px solid #2f6c58;border-radius:12px;background:#0d201a}
+.next-gate-card>div{display:grid;gap:3px}
+.next-gate-card span{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:900}
+.next-gate-card strong{font-size:16px}
+.guided-complete .primary-btn{margin-top:14px}
+@media(max-width:720px){.next-gate-card{align-items:stretch;flex-direction:column}}

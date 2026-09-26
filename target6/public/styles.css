@@ -74,3 +74,11 @@ button,select,textarea{font:inherit}.app-shell{display:grid;grid-template-column
 .exam-date-row input{background:#0c1714;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-width:220px}
 .exam-date-panel small{display:block;color:var(--muted);margin-top:10px}
 @media(max-width:820px){.coach-tasks{grid-template-columns:1fr}}
+
+
+/* Speaking pronunciation support */
+.pronunciation-cue{display:block;margin-top:7px;padding:8px 10px;border-left:3px solid var(--accent);border-radius:7px;background:#0a1713;color:var(--accent2);font-size:14px;line-height:1.45}
+.pronunciation-cue b{color:var(--text)}
+.translation-cue{display:block;margin-top:7px;color:var(--muted);font-size:13px}
+.pronunciation-stack,.correction-stack{display:grid;gap:4px;min-width:0}
+.pronunciation-stack strong,.correction-stack strong{font-size:17px;line-height:1.35}

@@ -269,9 +269,10 @@ Return JSON ONLY:
   "score": 0,
   "feedbackPt": "short, concrete feedback in European Portuguese",
   "correctedFr": "the best corrected natural French sentence",
+  "pronunciationPt": "learner-friendly European Portuguese sound cue for correctedFr, with syllable separation when useful; do not use IPA symbols",
   "keyPointPt": "one exact thing to remember next time"
 }
-score must be 0-100. Use achieved=true only when score is at least 70. Keep feedback encouraging but factual and concise.`;
+score must be 0-100. Use achieved=true only when score is at least 70. pronunciationPt must be easy for a Portuguese speaker to read aloud and must preserve French nasal vowels, liaison, mute final consonants and stress/rhythm as closely as practical. Keep feedback encouraging but factual and concise.`;
 }
 
 function speakingEvaluationPrompt(payload) {

@@ -165,3 +165,45 @@ button.is-busy{
 
 @keyframes toastIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
 .sim-loading{min-height:260px;display:grid;place-items:center;align-content:center;text-align:center;gap:10px}.sim-loading .loader{width:28px;height:28px;border-width:3px}.sim-loading strong{font-size:20px}.sim-loading small{color:var(--muted)}
+
+
+/* Guided -> model -> vocab -> final TEF speaking cycle */
+.exam-cycle-panel{margin:16px 0;border-color:#3a745f;background:linear-gradient(145deg,#112b22,#0b1a16)}
+.exam-cycle-panel h3{font-size:21px}
+.exam-cycle-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+.exam-cycle-steps>div{display:flex;gap:9px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:11px;background:#0a1713}
+.exam-cycle-steps b{width:28px;height:28px;flex:0 0 28px;border-radius:50%;display:grid;place-items:center;background:#173c30;color:var(--accent2)}
+.exam-cycle-steps span{display:grid;gap:2px}.exam-cycle-steps strong{font-size:12px}.exam-cycle-steps small{color:var(--muted);font-size:11px}
+.cycle-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-top:12px}
+.cycle-controls label{display:grid;gap:5px;color:var(--muted);font-size:12px}
+.cycle-controls select{min-width:120px;background:#0c1714;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px}
+.cycle-status{margin-top:11px;padding:10px 12px;border-radius:9px;background:#0a1713;border:1px solid var(--line);color:var(--accent2);font-size:13px}
+.cycle-banner{margin:10px 0;padding:12px 14px;border:1px solid #6c5a2b;border-radius:11px;background:#241f10}
+.cycle-banner strong{display:block;color:var(--warn);margin-bottom:4px}.cycle-banner span{color:#e3d8aa;font-size:13px}
+.assisted-help-card{margin:12px 0;padding:15px;border:1px solid #3d735f;border-radius:13px;background:#0d211a}
+.assisted-help-card h4{margin:0 0 7px;color:var(--accent2)}
+.assisted-translation{padding:10px;border-radius:9px;background:#091510;color:#d8e5df;white-space:pre-wrap}
+.support-phrase-list{display:grid;gap:8px;margin-top:12px}
+.support-phrase{display:grid;grid-template-columns:42px minmax(0,1fr);gap:9px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:10px;background:#091510}
+.support-phrase strong{display:block;font-size:15px}.support-phrase .pronunciation-cue{margin-top:5px}
+.support-purpose{display:block;margin-top:5px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.exam-no-help-banner{display:grid;gap:4px;margin:12px 0;padding:13px 15px;border:1px solid #8a4747;border-radius:11px;background:#271313}
+.exam-no-help-banner strong{color:#ffb0b0}.exam-no-help-banner span{color:#d9bcbc;font-size:13px}
+.cycle-stage-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.cycle-stage-head h3{margin:0}.cycle-stage-kicker{font-size:11px;letter-spacing:.12em;color:var(--accent);font-weight:900}
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.model-card{padding:16px;border:1px solid var(--line);border-radius:13px;background:#0b1814}
+.model-card h4{margin:0 0 6px}.model-card>p{color:var(--muted)}
+.model-lines{display:grid;gap:8px;margin-top:10px}.model-line{padding:10px;border:1px solid var(--line);border-radius:9px;background:#08130f}
+.model-line strong{display:block}.model-line small{display:block;margin-top:4px;color:var(--muted)}
+.cycle-next-box{margin-top:15px;padding:13px;border:1px solid #2f6c58;border-radius:11px;background:#0d211a;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.vocab-trainer{max-width:760px;margin:0 auto}.vocab-progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.vocab-card-large{padding:22px;border:1px solid #3b6f5d;border-radius:15px;background:#0a1814}
+.vocab-category{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:900}
+.vocab-fr{font-size:25px;font-weight:900;margin:9px 0}.vocab-help{margin-top:10px}.vocab-help .pronunciation-cue{margin:6px 0}
+.vocab-nav{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px;align-items:center}
+.final-cycle-summary{display:grid;gap:14px}.cycle-score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cycle-score{padding:13px;border:1px solid var(--line);border-radius:11px;background:#0a1713}
+.cycle-score span{display:block;color:var(--muted);font-size:11px}.cycle-score strong{display:block;font-size:25px;margin-top:3px}
+@media(max-width:900px){.exam-cycle-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.model-grid{grid-template-columns:1fr}.cycle-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.exam-cycle-steps,.cycle-score-grid{grid-template-columns:1fr}.vocab-fr{font-size:21px}}

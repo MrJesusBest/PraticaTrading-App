@@ -106,13 +106,13 @@ function readiness(){
   if(s==null) return Math.round(l*.45);
   let score = Math.round(l*.48+s*.52);
   if(unassistedListeningAttempts().length<8) score=Math.min(score,58);
-  if(state.speakingAttempts.length<2) score=Math.min(score,58);
+  if(state.speakingAttempts.filter(x=>!x.assisted).length<2) score=Math.min(score,58);
   return Math.max(0,Math.min(100,score));
 }
 function nextActionInfo(){
   if(!state.diagnostic.completed) return {page:'diagnostic',text:'Faz o diagnóstico inicial para o sistema descobrir onde deves concentrar o estudo.'};
   const l=listeningAccuracy() ?? 0, s=speakingAverage() ?? 0;
-  if(state.speakingAttempts.length<4 || s < l-6) return {page:'speaking',text:'Prioridade: Speaking. Faz uma tarefa da secção com menor desempenho e aplica a correção imediatamente.'};
+  if(state.speakingAttempts.filter(x=>!x.assisted).length<4 || s < l-6) return {page:'speaking',text:'Prioridade: Speaking. Faz uma tarefa da secção com menor desempenho e aplica a correção imediatamente.'};
   if(unassistedListeningAttempts().length<20 || l<75) return {page:'listening',text:'Prioridade: Listening. Trabalha detalhe, intenção e inferência antes do próximo mock.'};
   return {page:'plan',text:'Tens base suficiente para uma semana equilibrada. Recalcula o plano adaptativo e mantém consistência.'};
 }

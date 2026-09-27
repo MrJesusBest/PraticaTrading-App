@@ -96,7 +96,7 @@ function listeningAccuracy(){
   return a.length ? Math.round(a.filter(x=>x.correct).length/a.length*100) : null;
 }
 function speakingAverage(){
-  const a = state.speakingAttempts.slice(-10).map(x=>Number(x.overall)).filter(Number.isFinite);
+  const a = state.speakingAttempts.filter(x=>!x.assisted).slice(-10).map(x=>Number(x.overall)).filter(Number.isFinite);
   return a.length ? Math.round(a.reduce((x,y)=>x+y,0)/a.length) : null;
 }
 function readiness(){
@@ -303,11 +303,16 @@ async function generateSpeakingTask(opts={}){
 function renderSpeaking(task, workspace=$('#speakingWorkspace')){
   workspace.classList.remove('empty-state');
   const seconds=task.section==='A'?300:600;
+  const noHelp=Boolean(task.noHelp);
   const sectionHelp=task.section==='A'?'<strong>Section A:</strong> faz perguntas para obter informações e mantém a conversa.':'<strong>Section B:</strong> argumenta, dá razões e tenta convencer.';
+  const guidance=noHelp
+    ? '<div class="exam-no-help-banner"><strong>SIMULAÇÃO FINAL · SEM AJUDA</strong><span>Sem tradução, sugestões ou frases-modelo. Responde apenas à consigne em francês.</span></div>'
+    : `<div class="inline-help"><span class="help-title">O QUE TENS DE FAZER</span>${sectionHelp}<br><strong>Depois:</strong> Gravar → Parar → Transcrever → Avaliar com AI.</div>`;
+  const ptTip=(!noHelp && task.prepTipPt)?`<p><small><strong>Dica em português:</strong> ${escapeHtml(task.prepTipPt)}</small></p>`:'';
   workspace.innerHTML=`
-    <div class="panel-head"><h3>Section ${escapeHtml(task.section)} · ${escapeHtml(task.title)}</h3><span class="badge">${task.section==='A'?'5 min':'10 min'}</span></div>
-    <div class="inline-help"><span class="help-title">O QUE TENS DE FAZER</span>${sectionHelp}<br><strong>Depois:</strong> Gravar → Parar → Transcrever → Avaliar com AI.</div>
-    <div class="task-card"><h4>Consigne <small>· instrução da tarefa</small></h4><div class="task-prompt">${escapeHtml(task.promptFr)}</div><p><small><strong>Dica em português:</strong> ${escapeHtml(task.prepTipPt||'')}</small></p></div>
+    <div class="panel-head"><div><div class="small-label">${task.cycleLabel?escapeHtml(task.cycleLabel):'EXPRESSION ORALE'}</div><h3>Section ${escapeHtml(task.section)} · ${escapeHtml(task.title)}</h3></div><span class="badge">${task.section==='A'?'5 min':'10 min'}</span></div>
+    ${guidance}
+    <div class="task-card"><h4>Consigne <small>· instrução da tarefa</small></h4><div class="task-prompt">${escapeHtml(task.promptFr)}</div>${ptTip}</div>
     <div class="recording-controls"><button id="recordStart" class="record-btn">● Gravar</button><button id="recordStop" class="stop-btn" disabled>■ Parar</button><span id="recordTimer" class="timer">${formatTime(seconds)}</span></div>
     <audio id="recordPreview" controls class="hidden"></audio>
     <label class="small-label">TRANSCRIÇÃO</label>
@@ -368,13 +373,14 @@ async function evaluateSpeaking(task,workspace){
   try{
     const {evaluation}=await api('/api/evaluate-speaking',{section:task.section,task,transcript,durationSeconds});
     renderSpeakingEvaluation(evaluation,workspace);
-    state.speakingAttempts.push({section:task.section,overall:evaluation.overall,readinessBand:evaluation.readinessBand,criteria:evaluation.criteria,at:new Date().toISOString(),diagnostic:task.diagnostic});
-    logHistory('Speaking',`Section ${task.section}`,`${evaluation.overall}/100 · ${bandLabel(evaluation.readinessBand)}`);
+    state.speakingAttempts.push({section:task.section,overall:evaluation.overall,readinessBand:evaluation.readinessBand,criteria:evaluation.criteria,at:new Date().toISOString(),diagnostic:task.diagnostic,assisted:Boolean(task.assisted),cycleStage:task._cycleStage||null});
+    logHistory(task.assisted?'Speaking assistido':'Speaking',`Section ${task.section}`,`${evaluation.overall}/100 · ${bandLabel(evaluation.readinessBand)}`);
     if(task.diagnostic){
       if(task.section==='A')state.diagnostic.speakingA=true; if(task.section==='B')state.diagnostic.speakingB=true;
       maybeFinishDiagnostic();
     }
     saveState();
+    window.dispatchEvent(new CustomEvent('target6:speaking-evaluated',{detail:{task,evaluation,transcript,durationSeconds}}));
   }catch(e){toast(friendlyError(e),'error')}
   finally{setBusy(btn,false)}
 }

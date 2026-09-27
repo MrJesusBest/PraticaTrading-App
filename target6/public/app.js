@@ -51,8 +51,19 @@ function toast(msg, type='ok'){
 }
 function setBusy(el, on, label){
   if (!el) return;
-  if (on){ el.dataset.oldText = el.textContent; el.disabled=true; el.innerHTML=`<span class="loader"></span>${label||'A processar…'}`; }
-  else { el.disabled=false; el.textContent=el.dataset.oldText||el.textContent; }
+  if (on){
+    if(!el.dataset.oldText) el.dataset.oldText = el.textContent;
+    el.disabled=true;
+    el.classList.add('is-busy');
+    el.setAttribute('aria-busy','true');
+    el.innerHTML=`<span class="loader"></span>${label||'A processar…'}`;
+  } else {
+    el.disabled=false;
+    el.classList.remove('is-busy');
+    el.removeAttribute('aria-busy');
+    el.textContent=el.dataset.oldText||el.textContent;
+    delete el.dataset.oldText;
+  }
 }
 async function api(path, body={}){
   const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});

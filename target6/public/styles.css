@@ -93,3 +93,70 @@ button,select,textarea{font:inherit}.app-shell{display:grid;grid-template-column
 .next-gate-card strong{font-size:16px}
 .guided-complete .primary-btn{margin-top:14px}
 @media(max-width:720px){.next-gate-card{align-items:stretch;flex-direction:column}}
+
+
+/* UI interaction feedback audit */
+button,.seg,.choice,.nav-item,.audio-btn,.mini-audio,.record-btn,.stop-btn,.primary-btn,.secondary-btn,.ghost-btn,.danger-ghost{
+  transition:transform .09s ease,box-shadow .12s ease,filter .12s ease,background-color .12s ease,border-color .12s ease,opacity .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+button:not(:disabled):active,
+button.is-pressed:not(:disabled),
+.seg.is-pressed:not(:disabled),
+.choice.is-pressed:not(:disabled){
+  transform:translateY(2px) scale(.985);
+  filter:brightness(.92);
+}
+button.tap-confirm:not(:disabled){
+  box-shadow:0 0 0 3px rgba(45,214,155,.24),inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.primary-btn.tap-confirm:not(:disabled),
+.seg.active,
+.nav-item.active{
+  box-shadow:0 0 0 2px rgba(45,214,155,.24),0 6px 18px rgba(0,0,0,.18);
+}
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
+button:disabled,.seg:disabled{
+  opacity:.36!important;
+  filter:saturate(.45);
+  cursor:not-allowed!important;
+}
+button.is-busy{
+  cursor:progress!important;
+  opacity:.78;
+}
+.seg.active{
+  transform:translateY(-1px);
+}
+.seg.active::after{
+  content:" ✓";
+  font-weight:900;
+}
+.record-btn.live{
+  box-shadow:0 0 0 3px rgba(255,122,122,.18);
+}
+.audio-btn:not(:disabled):active,.mini-audio:not(:disabled):active{
+  transform:scale(.93);
+}
+.controls-row select{
+  transition:border-color .12s ease,box-shadow .12s ease,background-color .12s ease;
+}
+.controls-row select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(45,214,155,.13);
+}
+.click-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:20px;
+  margin-left:8px;
+  color:var(--accent2);
+  font-size:12px;
+  font-weight:800;
+}

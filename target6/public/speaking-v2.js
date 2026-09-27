@@ -52,16 +52,17 @@
     return (due.length?due:list).sort((a,b)=>a.p.mastery-b.p.mastery||a.p.tries-b.p.tries||a.i-b.i)[0].skill;
   }
   function stageLabel(){
-    const t=T(), a=avg('A'), b=avg('B');
+    const t=T(), a=avg('A'), b=avg('B'), min=flow.GUIDED_MIN||1;
     if(a<100)return 'A0/A1 · BASE A';
-    if(t.guided.A<2)return 'A2 · GUIADO A';
+    if(t.guided.A<min)return 'A2 · GUIADO A';
     if(b<100)return 'A1/B1 · BASE B';
-    if(t.guided.B<2)return 'B1 · GUIADO B';
+    if(t.guided.B<min)return 'B1 · GUIADO B';
     return 'B1+ · SIMULAÇÃO TEF';
   }
   function nextLabel(n){
-    if(n.code==='A_GUIDED')return 'Treino Guiado A · '+Math.min(T().guided.A,2)+'/2';
-    if(n.code==='B_GUIDED')return 'Treino Guiado B · '+Math.min(T().guided.B,2)+'/2';
+    const min=flow.GUIDED_MIN||1;
+    if(n.code==='A_GUIDED')return 'Treino Guiado A · '+Math.min(T().guided.A,min)+'/'+min;
+    if(n.code==='B_GUIDED')return 'Treino Guiado B · '+Math.min(T().guided.B,min)+'/'+min;
     if(n.code==='A_BASE')return 'Concluir Base Section A';
     if(n.code==='B_BASE')return 'Concluir Base Section B';
     return 'Simulação TEF';
@@ -73,9 +74,9 @@
     box.innerHTML=`
       <div class="path-top"><div><div class="small-label">ESTADO REAL DO SPEAKING</div><strong>${stageLabel()}</strong><p>O 100% da base não significa exame concluído. A progressão abaixo mostra exatamente o gate atual.</p></div><span class="badge">${t.total||0} micro-drills</span></div>
       <div class="mastery-row"><span>Base Section A</span><strong>${a}%</strong></div><div class="progress-track"><div class="progress-bar" style="width:${a}%"></div></div>
-      <div class="guided-gate"><span>Treino Guiado A</span><strong>${Math.min(t.guided.A,2)}/2</strong></div>
+      <div class="guided-gate"><span>Treino Guiado A</span><strong>${Math.min(t.guided.A,flow.GUIDED_MIN||1)}/${flow.GUIDED_MIN||1}</strong></div>
       <div class="mastery-row"><span>Base Section B</span><strong>${b}%</strong></div><div class="progress-track"><div class="progress-bar" style="width:${b}%"></div></div>
-      <div class="guided-gate"><span>Treino Guiado B</span><strong>${Math.min(t.guided.B,2)}/2</strong></div>
+      <div class="guided-gate"><span>Treino Guiado B</span><strong>${Math.min(t.guided.B,flow.GUIDED_MIN||1)}/${flow.GUIDED_MIN||1}</strong></div>
       <div class="next-gate-card"><div><span>PRÓXIMO PASSO</span><strong>${escapeHtml(nextLabel(n))}</strong></div><button id="advanceSpeakingNow" class="primary-btn">AVANÇAR AGORA</button></div>`;
     $('#advanceSpeakingNow').onclick=()=>startStage(n);
 
@@ -90,7 +91,7 @@
     const guidedBtn=$('#speakingModeSelector [data-mode="guided"]');
     const examBtn=$('#speakingModeSelector [data-mode="exam"]');
     if(guidedBtn) guidedBtn.disabled=!(avg(sec)===100 || T().guided[sec]>0);
-    if(examBtn) examBtn.disabled=!flow.examReady(T(),ids);
+    if(examBtn){ examBtn.disabled=false; examBtn.classList.toggle('recommended-ready',flow.examReady(T(),ids)); }
   }
 
   function setMode(nextMode,{clear=false,save=true}={}){
@@ -101,7 +102,7 @@
     if(d)d.innerHTML=nextMode==='learn'
       ? '<strong>APRENDER:</strong> consolida as frases da base até 100%.'
       : nextMode==='guided'
-        ? '<strong>TREINO GUIADO:</strong> 5 interações por passagem. São necessárias 2 passagens por secção.'
+        ? '<strong>TREINO GUIADO:</strong> 5 interações por passagem. 1 passagem mínima por secção desbloqueia a simulação; podes continuar a treinar depois.'
         : '<strong>SIMULAÇÃO TEF:</strong> formato completo, com tempo e sem ajuda inicial.';
     $('#speakingExamControls')?.classList.toggle('hidden',nextMode!=='exam');
     const start=$('#startSpeakingTraining');
@@ -188,7 +189,7 @@
             persist(); renderPath();
             const n=nextStage();
             const w=$('#speakingWorkspace');
-            w.innerHTML=`<div class="guided-complete"><div class="empty-icon">✓</div><h3>Passagem guiada concluída.</h3><p>Estado: ${Math.min(T().guided[currentSection()],2)}/2. Próximo: <strong>${escapeHtml(nextLabel(n))}</strong>.</p><button id="guidedAdvanceNow" class="primary-btn">AVANÇAR AGORA</button></div>`;
+            w.innerHTML=`<div class="guided-complete"><div class="empty-icon">✓</div><h3>Passagem guiada concluída.</h3><p>Estado mínimo: ${Math.min(T().guided[currentSection()],flow.GUIDED_MIN||1)}/${flow.GUIDED_MIN||1}. Próximo: <strong>${escapeHtml(nextLabel(n))}</strong>.</p><button id="guidedAdvanceNow" class="primary-btn">AVANÇAR AGORA</button></div>`;
             $('#guidedAdvanceNow').onclick=()=>startStage(n);
             return;
           }
@@ -218,7 +219,7 @@
       if(!(avg(sec)===100 || T().guided[sec]>0)){ toast('Primeiro conclui a base desta secção.','error'); return; }
       guidedIndex=0; renderDrill(curriculum[sec][0],true); return;
     }
-    if(!flow.examReady(T(),ids)){ toast('A Simulação TEF abre depois dos dois treinos guiados A e B.','error'); return; }
+    if(!flow.examReady(T(),ids)) toast('Simulação aberta em modo de estudo. O AI Coach continua a recomendar os pontos que faltam.','ok');
     generateSpeakingTask({section:sec,difficulty:$('#speakingDifficulty')?.value||'B1'});
   }
 
@@ -231,7 +232,7 @@
     T();
     $$('#speakingModeSelector [data-mode]').forEach(b=>b.onclick=()=>{
       const m=b.dataset.mode;
-      if(b.disabled){ toast(m==='exam'?'A simulação ainda está bloqueada pelo progresso.':'Conclui primeiro a base desta secção.','error'); return; }
+      if(m==='exam' && !flow.examReady(T(),ids)) toast('Podes abrir a simulação para estudar o formato, mas o plano recomenda concluir primeiro a base/guiado pendente.','ok');
       setMode(m,{clear:true});
     });
     $$('#speakingSectionSelector .seg').forEach(b=>b.onclick=()=>{

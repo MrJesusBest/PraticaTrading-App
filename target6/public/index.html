@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TARGET 6 — TEF Canada</title>
   <meta name="description" content="Adaptive TEF Canada training focused on Listening and Speaking for NCLC 5-6." />
-  <link rel="stylesheet" href="/styles.css?v=20260926-6" />
+  <link rel="stylesheet" href="/styles.css?v=20260926-7" />
 </head>
 <body>
   <div class="app-shell">
@@ -207,6 +207,31 @@
           <div class="guide-tip"><strong>Regra:</strong> não saltamos uma fraqueza. O sistema volta às estruturas erradas em 1, 3, 7, 14 e 30 dias conforme fores dominando.</div>
         </div>
 
+        <div id="examCyclePanel" class="panel exam-cycle-panel">
+          <div class="panel-head">
+            <div>
+              <div class="small-label">CICLO EXAME TEF · RECOMENDADO</div>
+              <h3>Ajuda PT → Exemplo AI → Vocabulário → Exame sem ajuda</h3>
+            </div>
+            <span id="examCycleBadge" class="badge">4 PASSOS</span>
+          </div>
+          <p>Faz primeiro o formato com ajuda total em português. Depois ouve e lê um exemplo forte, treina o vocabulário de argumentação e termina com uma prova nova sem qualquer ajuda.</p>
+          <div class="exam-cycle-steps">
+            <div><b>1</b><span><strong>EXAME COM AJUDA</strong><small>Section A + B · tradução + frases úteis</small></span></div>
+            <div><b>2</b><span><strong>EXEMPLO AI</strong><small>falado + escrito + pronúncia</small></span></div>
+            <div><b>3</b><span><strong>VOCABULÁRIO</strong><small>argumentação reutilizável</small></span></div>
+            <div><b>4</b><span><strong>EXAME FINAL</strong><small>novo exercício · sem ajuda</small></span></div>
+          </div>
+          <div class="cycle-controls">
+            <label>Dificuldade
+              <select id="cycleDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
+            </label>
+            <button id="startExamCycle" class="primary-btn">INICIAR CICLO COMPLETO</button>
+            <button id="resetExamCycle" class="danger-ghost hidden">Recomeçar ciclo</button>
+          </div>
+          <div id="examCycleStatus" class="cycle-status">Ainda não iniciado.</div>
+        </div>
+
         <div id="speakingPathOverview" class="panel speaking-path-panel"></div>
 
         <div class="panel speaking-mode-panel">
@@ -343,10 +368,11 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="/app.js?v=20260926-6"></script>
-  <script src="/speaking-flow-core.js?v=20260926-6"></script>
-  <script src="/speaking-v2.js?v=20260926-6"></script>
-  <script src="/resume-coach.js?v=20260926-6"></script>
-  <script src="/ui-feedback.js?v=20260926-6"></script>
+  <script src="/app.js?v=20260926-7"></script>
+  <script src="/speaking-flow-core.js?v=20260926-7"></script>
+  <script src="/speaking-v2.js?v=20260926-7"></script>
+  <script src="/speaking-exam-cycle.js?v=20260926-7"></script>
+  <script src="/resume-coach.js?v=20260926-7"></script>
+  <script src="/ui-feedback.js?v=20260926-7"></script>
 </body>
 </html>

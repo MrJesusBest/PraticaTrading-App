@@ -78,7 +78,7 @@
       <div class="mastery-row"><span>Base Section B</span><strong>${b}%</strong></div><div class="progress-track"><div class="progress-bar" style="width:${b}%"></div></div>
       <div class="guided-gate"><span>Treino Guiado B</span><strong>${Math.min(t.guided.B,flow.GUIDED_MIN||1)}/${flow.GUIDED_MIN||1}</strong></div>
       <div class="next-gate-card"><div><span>PRÓXIMO PASSO</span><strong>${escapeHtml(nextLabel(n))}</strong></div><button id="advanceSpeakingNow" class="primary-btn">AVANÇAR AGORA</button></div>`;
-    $('#advanceSpeakingNow').onclick=()=>startStage(n);
+    $('#advanceSpeakingNow').onclick=e=>startStage(n,e.currentTarget);
 
     const bBtn=$('#speakingSectionSelector .seg[data-section="B"]');
     if(bBtn){
@@ -116,17 +116,17 @@
     const n=nextStage();
     w.className='panel exercise-panel empty-state';
     w.innerHTML=`<div class="empty-icon">→</div><h3>${escapeHtml(nextLabel(n))}</h3><p>O sistema preservou o teu progresso. Não precisas repetir o que já está a 100%.</p><button id="workspaceAdvance" class="primary-btn">AVANÇAR AGORA</button>`;
-    $('#workspaceAdvance').onclick=()=>startStage(n);
+    $('#workspaceAdvance').onclick=e=>startStage(n,e.currentTarget);
   }
 
-  function startStage(n){
+  function startStage(n,sourceButton=null){
     if(!n)n=nextStage();
     setSection(n.section);
     setMode(n.mode,{clear:false});
     renderPath();
     if(n.mode==='learn') renderDrill(nextSkill(n.section),false);
     else if(n.mode==='guided'){ guidedIndex=0; renderDrill(curriculum[n.section][0],true); }
-    else generateSpeakingTask({section:n.section,difficulty:$('#speakingDifficulty')?.value||'B1'});
+    else generateSpeakingTask({section:n.section,difficulty:$('#speakingDifficulty')?.value||'B1',button:sourceButton||$('#startSpeakingTraining')});
   }
 
   function renderDrill(skill,guided=false){
@@ -190,7 +190,7 @@
             const n=nextStage();
             const w=$('#speakingWorkspace');
             w.innerHTML=`<div class="guided-complete"><div class="empty-icon">✓</div><h3>Passagem guiada concluída.</h3><p>Estado mínimo: ${Math.min(T().guided[currentSection()],flow.GUIDED_MIN||1)}/${flow.GUIDED_MIN||1}. Próximo: <strong>${escapeHtml(nextLabel(n))}</strong>.</p><button id="guidedAdvanceNow" class="primary-btn">AVANÇAR AGORA</button></div>`;
-            $('#guidedAdvanceNow').onclick=()=>startStage(n);
+            $('#guidedAdvanceNow').onclick=e=>startStage(n,e.currentTarget);
             return;
           }
           renderDrill(curriculum[currentSection()][guidedIndex],true);
@@ -212,15 +212,16 @@
     }
   }
 
-  function startCurrent(){
+  function startCurrent(event){
     const sec=currentSection();
+    const sourceButton=event?.currentTarget||$('#startSpeakingTraining');
     if(mode==='learn'){ renderDrill(nextSkill(sec),false); return; }
     if(mode==='guided'){
       if(!(avg(sec)===100 || T().guided[sec]>0)){ toast('Primeiro conclui a base desta secção.','error'); return; }
       guidedIndex=0; renderDrill(curriculum[sec][0],true); return;
     }
     if(!flow.examReady(T(),ids)) toast('Simulação aberta em modo de estudo. O AI Coach continua a recomendar os pontos que faltam.','ok');
-    generateSpeakingTask({section:sec,difficulty:$('#speakingDifficulty')?.value||'B1'});
+    generateSpeakingTask({section:sec,difficulty:$('#speakingDifficulty')?.value||'B1',button:sourceButton});
   }
 
   window.startProgressiveDiagnostic=()=>{

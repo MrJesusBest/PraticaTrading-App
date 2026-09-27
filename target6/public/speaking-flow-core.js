@@ -27,17 +27,18 @@
     if(!list.length)return 0;
     return Math.round(list.reduce((sum,id)=>sum+clamp(training.skills?.[id]?.mastery),0)/list.length);
   }
+  const GUIDED_MIN=1;
   function nextStage(training, ids){
     const a=average(training,ids,'A'), b=average(training,ids,'B');
     if(a<100)return {section:'A',mode:'learn',code:'A_BASE',label:'Concluir Base Section A'};
-    if(num(training.guided?.A)<2)return {section:'A',mode:'guided',code:'A_GUIDED',label:'Treino Guiado Section A'};
+    if(num(training.guided?.A)<GUIDED_MIN)return {section:'A',mode:'guided',code:'A_GUIDED',label:'Treino Guiado Section A'};
     if(b<100)return {section:'B',mode:'learn',code:'B_BASE',label:'Concluir Base Section B'};
-    if(num(training.guided?.B)<2)return {section:'B',mode:'guided',code:'B_GUIDED',label:'Treino Guiado Section B'};
+    if(num(training.guided?.B)<GUIDED_MIN)return {section:'B',mode:'guided',code:'B_GUIDED',label:'Treino Guiado Section B'};
     return {section:'A',mode:'exam',code:'EXAM',label:'Simulação TEF'};
   }
   function examReady(training,ids){
     return average(training,ids,'A')===100 && average(training,ids,'B')===100 &&
-      num(training.guided?.A)>=2 && num(training.guided?.B)>=2;
+      num(training.guided?.A)>=GUIDED_MIN && num(training.guided?.B)>=GUIDED_MIN;
   }
-  g.Target6SpeakingFlow={normalize,average,nextStage,examReady};
+  g.Target6SpeakingFlow={normalize,average,nextStage,examReady,GUIDED_MIN};
 })(globalThis);

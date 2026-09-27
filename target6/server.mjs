@@ -252,6 +252,98 @@ Return JSON ONLY:
 }`;
 }
 
+function speakingCyclePackagePrompt(payload = {}) {
+  const difficulty = ['A2','B1','B2'].includes(String(payload.difficulty||'')) ? String(payload.difficulty) : 'B1';
+  return `Create ONE complete ORIGINAL TEF Canada oral-expression TRAINING cycle for a Portuguese-speaking learner.
+Difficulty: ${difficulty}.
+Do not copy or paraphrase official/commercial test items.
+
+The cycle has:
+1) an ASSISTED Section A and Section B, with full European Portuguese support;
+2) a DIFFERENT hidden final Section A and Section B for a later unassisted test;
+3) a small baseline bank of argumentation phrases.
+
+Section A must train obtaining information through relevant questions for about 5 minutes.
+Section B must train arguing/persuading another person for about 10 minutes.
+Assisted and final scenarios MUST be different but comparable in difficulty.
+All French must be natural standard French suitable for TEF training.
+
+Return JSON ONLY:
+{
+  "difficulty":"${difficulty}",
+  "assisted":{
+    "A":{
+      "section":"A","title":"...","promptFr":"...","promptPt":"complete European Portuguese translation",
+      "examinerRoleFr":"...","prepTipPt":"very concrete Portuguese guidance",
+      "keyObjectives":["..."],
+      "support":[
+        {"purposePt":"what this phrase does","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+      ]
+    },
+    "B":{
+      "section":"B","title":"...","promptFr":"...","promptPt":"complete European Portuguese translation",
+      "examinerRoleFr":"...","prepTipPt":"very concrete Portuguese guidance",
+      "keyObjectives":["..."],
+      "support":[
+        {"purposePt":"what this phrase does","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+      ]
+    }
+  },
+  "final":{
+    "A":{"section":"A","title":"...","promptFr":"...","examinerRoleFr":"...","keyObjectives":["..."],"prepTipPt":""},
+    "B":{"section":"B","title":"...","promptFr":"...","examinerRoleFr":"...","keyObjectives":["..."],"prepTipPt":""}
+  },
+  "baselineVocab":[
+    {"category":"opinion|reason|example|objection|linker|conclusion","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+  ]
+}
+
+Requirements:
+- assisted.A.support: 6 useful question/opening/follow-up phrases.
+- assisted.B.support: 8 useful persuasion/argumentation phrases.
+- baselineVocab: exactly 10 high-value reusable argumentation phrases, not topic-specific nouns.
+- Portuguese must be European Portuguese.
+- Final tasks must contain NO Portuguese help or translations.`;
+}
+
+function speakingCycleModelPrompt(payload = {}) {
+  const assisted = payload.assisted || {};
+  const results = payload.results || {};
+  return `You are a TEF Canada speaking coach. The learner has just completed an ASSISTED practice of Section A and B.
+Create a model demonstration and targeted argumentation vocabulary based on the tasks and learner transcripts.
+
+Assisted tasks: ${JSON.stringify(assisted)}
+Learner results/transcripts: ${JSON.stringify(results)}
+
+Return JSON ONLY:
+{
+  "coachPt":"short overall feedback in European Portuguese",
+  "modelA":{
+    "introPt":"how the learner should approach Section A",
+    "lines":[
+      {"fr":"natural candidate sentence/question","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    ]
+  },
+  "modelB":{
+    "introPt":"how the learner should approach Section B",
+    "lines":[
+      {"fr":"natural candidate argument sentence","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    ]
+  },
+  "correctionsPt":["3-5 highest-value corrections or habits"],
+  "vocab":[
+    {"category":"opinion|reason|example|objection|linker|conclusion","fr":"reusable French phrase","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+  ]
+}
+
+Requirements:
+- modelA.lines: 7-9 candidate turns/questions showing opening, useful questions, follow-up and closing.
+- modelB.lines: 8-10 lines forming a coherent persuasive response with opinion, reasons, example, objection handling and conclusion.
+- vocab: exactly 12 reusable argumentation phrases targeted to the learner's gaps; avoid narrow topic-specific nouns.
+- Keep French natural and realistic for TEF speaking practice.
+- Portuguese must be European Portuguese.`;
+}
+
 function speakingDrillEvaluationPrompt(payload = {}) {
   const section = String(payload.section || 'A') === 'B' ? 'B' : 'A';
   const modelFr = String(payload.modelFr || '').trim();
@@ -465,6 +557,24 @@ async function handleApi(req, res, pathname) {
       const text = await openAIResponse(speakingPrompt(body), ROUTINE_MODEL);
       const task = extractJson(text);
       return sendJson(res, 200, { task });
+    }
+
+    if (pathname === '/api/generate-speaking-cycle') {
+      const text = await openAIResponse(speakingCyclePackagePrompt(body), ROUTINE_MODEL);
+      const cycle = extractJson(text);
+      if (!cycle?.assisted?.A?.promptFr || !cycle?.assisted?.B?.promptFr || !cycle?.final?.A?.promptFr || !cycle?.final?.B?.promptFr) {
+        throw new Error('Generated speaking cycle failed validation');
+      }
+      return sendJson(res, 200, { cycle });
+    }
+
+    if (pathname === '/api/speaking-cycle-model') {
+      const text = await openAIResponse(speakingCycleModelPrompt(body), ROUTINE_MODEL);
+      const model = extractJson(text);
+      if (!Array.isArray(model?.modelA?.lines) || !Array.isArray(model?.modelB?.lines) || !Array.isArray(model?.vocab)) {
+        throw new Error('Speaking cycle model failed validation');
+      }
+      return sendJson(res, 200, { model });
     }
 
     if (pathname === '/api/evaluate-speaking-drill') {

@@ -126,7 +126,17 @@
     renderPath();
     if(n.mode==='learn') renderDrill(nextSkill(n.section),false);
     else if(n.mode==='guided'){ guidedIndex=0; renderDrill(curriculum[n.section][0],true); }
-    else generateSpeakingTask({section:n.section,difficulty:$('#speakingDifficulty')?.value||'B1',button:sourceButton||$('#startSpeakingTraining')});
+    else {
+      const difficulty=$('#speakingDifficulty')?.value||'B1';
+      showSimulationLoading(difficulty);
+      generateSpeakingTask({section:n.section,difficulty,button:sourceButton||$('#startSpeakingTraining')});
+    }
+  }
+
+  function showSimulationLoading(difficulty){
+    const w=$('#speakingWorkspace'); if(!w)return;
+    w.className='panel exercise-panel sim-loading';
+    w.innerHTML=`<span class="loader"></span><strong>A preparar Simulação TEF · ${escapeHtml(difficulty)}</strong><small>Aguarda alguns segundos. O botão fica bloqueado para evitar duplo clique.</small>`;
   }
 
   function renderDrill(skill,guided=false){
@@ -149,7 +159,11 @@
     $('#speakListen').onclick=()=>playStudyPhrase(skill[2],'neutral',$('#speakListen'));
     $('#speakMic').onclick=startRecognition;
     $('#microEvaluate').onclick=()=>evaluateDrill(skill,guided);
-    if($('#showModel'))$('#showModel').onclick=()=>$('#hiddenModel').classList.remove('hidden');
+    if($('#showModel'))$('#showModel').onclick=()=>{
+      const model=$('#hiddenModel');
+      const hidden=model.classList.toggle('hidden');
+      $('#showModel').textContent=hidden?'Mostrar ajuda':'Ocultar ajuda';
+    };
   }
 
   function startRecognition(){
@@ -221,7 +235,9 @@
       guidedIndex=0; renderDrill(curriculum[sec][0],true); return;
     }
     if(!flow.examReady(T(),ids)) toast('Simulação aberta em modo de estudo. O AI Coach continua a recomendar os pontos que faltam.','ok');
-    generateSpeakingTask({section:sec,difficulty:$('#speakingDifficulty')?.value||'B1',button:sourceButton});
+    const difficulty=$('#speakingDifficulty')?.value||'B1';
+    showSimulationLoading(difficulty);
+    generateSpeakingTask({section:sec,difficulty,button:sourceButton});
   }
 
   window.startProgressiveDiagnostic=()=>{

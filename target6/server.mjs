@@ -586,7 +586,7 @@ async function handleApi(req, res, pathname) {
     if (pathname === '/api/speaking-cycle-model') {
       const text = await openAIResponse(speakingCycleModelPrompt(body), ROUTINE_MODEL);
       const model = extractJson(text);
-      if (!Array.isArray(model?.modelA?.lines) || !Array.isArray(model?.modelB?.lines) || !Array.isArray(model?.vocab)) {
+      if (!Array.isArray(model?.modelA?.dialogue) || !Array.isArray(model?.modelB?.dialogue) || !Array.isArray(model?.vocab)) {
         throw new Error('Speaking cycle model failed validation');
       }
       return sendJson(res, 200, { model });

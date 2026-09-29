@@ -13,7 +13,7 @@
 
   let recorder=null, chunks=[], stream=null, timer=null, finishing=false;
   let audioCtx=null, analyser=null, vadRaf=null, vadHeardVoice=false, vadLastVoiceAt=0, vadStartedAt=0, turnSubmitting=false;
-  let cycleRecognition=null, recognitionHeardSpeech=false, noVoiceFallbackTimer=null;
+  let cycleRecognition=null, recognitionHeardSpeech=false, recognizedTurnText='', noVoiceFallbackTimer=null, hardTurnTimer=null;
 
   function blank(){
     return {
@@ -116,6 +116,7 @@
   function stopVAD(){
     if(vadRaf){ cancelAnimationFrame(vadRaf); vadRaf=null; }
     if(noVoiceFallbackTimer){ clearTimeout(noVoiceFallbackTimer); noVoiceFallbackTimer=null; }
+    if(hardTurnTimer){ clearTimeout(hardTurnTimer); hardTurnTimer=null; }
     if(cycleRecognition){ try{cycleRecognition.onend=null;cycleRecognition.stop();}catch{} cycleRecognition=null; }
     recognitionHeardSpeech=false;
     if(audioCtx){ try{audioCtx.close();}catch{} }
@@ -139,19 +140,29 @@
       cycleRecognition.interimResults=true;
       cycleRecognition.continuous=false;
       recognitionHeardSpeech=false;
+      recognizedTurnText='';
       cycleRecognition.onresult=e=>{
-        if(e.results?.length)recognitionHeardSpeech=true;
+        let finalText='',interim='';
+        for(let i=0;i<e.results.length;i++){
+          const t=String(e.results[i][0]?.transcript||'').trim();
+          if(!t)continue;
+          recognitionHeardSpeech=true;
+          if(e.results[i].isFinal)finalText+=(finalText?' ':'')+t;
+          else interim+=(interim?' ':'')+t;
+        }
+        if(finalText)recognizedTurnText=(recognizedTurnText+' '+finalText).trim();
+        const heard=(recognizedTurnText||interim).trim();
+        const st=$('#cycleTurnStatus');
+        if(st && heard)st.textContent='Ouvi: “'+heard+'” — termina a frase e faz uma pequena pausa.';
       };
-      cycleRecognition.onspeechend=()=>{
+      const finishFromRecognition=()=>{
+        const heard=recognizedTurnText.trim();
         if(recognitionHeardSpeech && recorder?.state==='recording'){
-          setTimeout(()=>stopTurn(section,assisted,true),350);
+          setTimeout(()=>stopTurn(section,assisted,true,heard),180);
         }
       };
-      cycleRecognition.onend=()=>{
-        if(recognitionHeardSpeech && recorder?.state==='recording'){
-          setTimeout(()=>stopTurn(section,assisted,true),350);
-        }
-      };
+      cycleRecognition.onspeechend=finishFromRecognition;
+      cycleRecognition.onend=finishFromRecognition;
       cycleRecognition.onerror=()=>{};
       cycleRecognition.start();
     }catch{}
@@ -200,18 +211,13 @@
       };
       vadRaf=requestAnimationFrame(loop);
 
-      // Safety net: for a very short greeting such as "Bonjour", never leave the UI recording forever.
       noVoiceFallbackTimer=setTimeout(()=>{
-        if(recorder?.state==='recording' && !turnSubmitting){
-          const status=$('#cycleTurnStatus');
-          if(status)status.textContent='A terminar o teu turno e a enviar…';
-          stopTurn(section,assisted,true);
+        if(recorder?.state==='recording' && recognitionHeardSpeech && !turnSubmitting){
+          stopTurn(section,assisted,true,recognizedTurnText);
         }
-      },6500);
+      },4200);
     }catch{
-      noVoiceFallbackTimer=setTimeout(()=>{
-        if(recorder?.state==='recording' && !turnSubmitting)stopTurn(section,assisted,true);
-      },6500);
+      // The independent hardTurnTimer in startTurn still guarantees that recording cannot hang forever.
     }
   }
 
@@ -339,17 +345,27 @@
       $('#cycleTurnStart').classList.add('live');
       $('#cycleTurnStart').textContent='● A ouvir-te…';
       $('#cycleTurnStop').disabled=false;
-      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… quando parares ~1–2 s, envio automaticamente.';
+      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… fala normalmente.';
       startVAD(section,assisted);
+      hardTurnTimer=setTimeout(()=>{
+        if(recorder?.state==='recording' && !turnSubmitting){
+          const st=$('#cycleTurnStatus');
+          if(st)st.textContent='A fechar este turno para o examinador responder…';
+          stopTurn(section,assisted,true,recognizedTurnText);
+        }
+      },assisted?8000:18000);
     }catch(e){
       toast('Não consegui abrir o microfone: '+e.message,'error');
     }
   }
 
-  async function stopTurn(section,assisted,auto=false){
+  async function stopTurn(section,assisted,auto=false,recognizedText=''){
     if(turnSubmitting)return;
     if(!recorder || recorder.state!=='recording')return;
     turnSubmitting=true;
+    if(hardTurnTimer){ clearTimeout(hardTurnTimer); hardTurnTimer=null; }
+    if(noVoiceFallbackTimer){ clearTimeout(noVoiceFallbackTimer); noVoiceFallbackTimer=null; }
+    const speechText=String(recognizedText||recognizedTurnText||'').trim();
     stopVAD();
     $('#cycleTurnStop').disabled=true;
     $('#cycleTurnStatus').textContent=auto?'Pausa detetada — a enviar o teu turno…':'A enviar o teu turno…';
@@ -367,8 +383,11 @@
 
     const rt=ensureRuntime(section,assisted),task=taskFor(section,assisted);
     try{
-      const {transcript}=await api('/api/transcribe',{audioDataUrl:dataUrl});
-      const candidateText=String(transcript||'').trim();
+      let candidateText=speechText;
+      if(!candidateText){
+        const {transcript}=await api('/api/transcribe',{audioDataUrl:dataUrl});
+        candidateText=String(transcript||'').trim();
+      }
       if(!candidateText)throw new Error('A transcrição ficou vazia. Repete o turno.');
 
       rt.candidateTurns.push(candidateText);

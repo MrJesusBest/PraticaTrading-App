@@ -155,14 +155,14 @@
         const st=$('#cycleTurnStatus');
         if(st && heard)st.textContent='Ouvi: “'+heard+'” — termina a frase e faz uma pequena pausa.';
       };
-      const finishFromRecognition=()=>{
-        const heard=recognizedTurnText.trim();
-        if(recognitionHeardSpeech && recorder?.state==='recording'){
-          setTimeout(()=>stopTurn(section,assisted,true,heard),180);
-        }
+      const notePause=()=>{
+        const st=$('#cycleTurnStatus');
+        if(st && recorder?.state==='recording')st.textContent=assisted
+          ? 'Pausa detetada — podes continuar a falar. Espero cerca de 3 segundos antes de enviar.'
+          : 'Pausa detetada — podes continuar. Espero um pouco antes de enviar.';
       };
-      cycleRecognition.onspeechend=finishFromRecognition;
-      cycleRecognition.onend=finishFromRecognition;
+      cycleRecognition.onspeechend=notePause;
+      cycleRecognition.onend=notePause;
       cycleRecognition.onerror=()=>{};
       cycleRecognition.start();
     }catch{}
@@ -186,7 +186,7 @@
       vadLastVoiceAt=vadStartedAt;
       vadHeardVoice=false;
       let hotFrames=0;
-      const silenceMs=1250;
+      const silenceMs=assisted?3200:2400;
       const minTurnMs=250;
       const threshold=.006;
 
@@ -211,11 +211,7 @@
       };
       vadRaf=requestAnimationFrame(loop);
 
-      noVoiceFallbackTimer=setTimeout(()=>{
-        if(recorder?.state==='recording' && recognitionHeardSpeech && !turnSubmitting){
-          stopTurn(section,assisted,true,recognizedTurnText);
-        }
-      },4200);
+      // Voice activity, not SpeechRecognition end events, decides when the learner has actually finished.
     }catch{
       // The independent hardTurnTimer in startTurn still guarantees that recording cannot hang forever.
     }
@@ -319,7 +315,7 @@
         <button id="cycleTurnStop" class="stop-btn" disabled>■ Enviar agora</button>
         <button id="cycleFinishSection" class="secondary-btn">Terminar secção e avaliar</button>
       </div>
-      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Quando fizeres uma pausa de ~1–2 s, envio automaticamente.':'Modo exame: fala normalmente. Depois de uma pausa de ~1–2 s, o teu turno é enviado automaticamente.'}</div>
+      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Podes pensar e fazer pequenas pausas; só envio depois de cerca de 3 s de silêncio.':'Modo exame: fala normalmente. Só envio depois de uma pausa clara, para não cortar a tua resposta.'}</div>
       <div id="cycleSectionFeedback"></div>`;
 
     renderConversation(rt,assisted);
@@ -345,7 +341,7 @@
       $('#cycleTurnStart').classList.add('live');
       $('#cycleTurnStart').textContent='● A ouvir-te…';
       $('#cycleTurnStop').disabled=false;
-      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… fala normalmente.';
+      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… fala normalmente; podes fazer pequenas pausas para pensar.';
       startVAD(section,assisted);
       hardTurnTimer=setTimeout(()=>{
         if(recorder?.state==='recording' && !turnSubmitting){
@@ -353,7 +349,7 @@
           if(st)st.textContent='A fechar este turno para o examinador responder…';
           stopTurn(section,assisted,true,recognizedTurnText);
         }
-      },assisted?8000:18000);
+      },45000);
     }catch(e){
       toast('Não consegui abrir o microfone: '+e.message,'error');
     }
@@ -383,11 +379,12 @@
 
     const rt=ensureRuntime(section,assisted),task=taskFor(section,assisted);
     try{
-      let candidateText=speechText;
-      if(!candidateText){
+      let candidateText='';
+      try{
         const {transcript}=await api('/api/transcribe',{audioDataUrl:dataUrl});
         candidateText=String(transcript||'').trim();
-      }
+      }catch{}
+      if(!candidateText)candidateText=speechText;
       if(!candidateText)throw new Error('A transcrição ficou vazia. Repete o turno.');
 
       rt.candidateTurns.push(candidateText);

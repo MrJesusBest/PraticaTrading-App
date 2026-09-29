@@ -294,14 +294,14 @@ Return JSON ONLY:
     "B":{"section":"B","title":"...","promptFr":"...","examinerRoleFr":"...","keyObjectives":["..."],"prepTipPt":""}
   },
   "baselineVocab":[
-    {"category":"opinion|reason|example|objection|linker|conclusion","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    {"category":"question|followup|opinion|reason|example|objection|linker|conclusion","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
   ]
 }
 
 Requirements:
 - assisted.A.support: 6 useful question/opening/follow-up phrases.
 - assisted.B.support: 8 useful persuasion/argumentation phrases.
-- baselineVocab: exactly 10 high-value reusable argumentation phrases, not topic-specific nouns.
+- baselineVocab: exactly 10 high-value reusable phrases: at least 3 Section A question/follow-up structures and at least 5 Section B argumentation/objection/linker structures; avoid topic-specific nouns.
 - Portuguese must be European Portuguese.
 - Final tasks must contain NO Portuguese help or translations.`;
 }
@@ -309,37 +309,38 @@ Requirements:
 function speakingCycleModelPrompt(payload = {}) {
   const assisted = payload.assisted || {};
   const results = payload.results || {};
-  return `You are a TEF Canada speaking coach. The learner has just completed an ASSISTED practice of Section A and B.
-Create a model demonstration and targeted argumentation vocabulary based on the tasks and learner transcripts.
+  return `You are a TEF Canada speaking coach. The learner has just completed an ASSISTED interactive practice of Section A and B with an AI interlocutor.
+Create a model demonstration of how a strong two-way conversation could have happened, plus targeted reusable vocabulary based on the learner's actual candidate turns and difficulties.
 
 Assisted tasks: ${JSON.stringify(assisted)}
-Learner results/transcripts: ${JSON.stringify(results)}
+Learner interactive results: ${JSON.stringify(results)}
 
 Return JSON ONLY:
 {
   "coachPt":"short overall feedback in European Portuguese",
   "modelA":{
     "introPt":"how the learner should approach Section A",
-    "lines":[
-      {"fr":"natural candidate sentence/question","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    "dialogue":[
+      {"role":"candidate|examiner","fr":"natural spoken French turn","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
     ]
   },
   "modelB":{
     "introPt":"how the learner should approach Section B",
-    "lines":[
-      {"fr":"natural candidate argument sentence","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    "dialogue":[
+      {"role":"candidate|examiner","fr":"natural spoken French turn","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
     ]
   },
-  "correctionsPt":["3-5 highest-value corrections or habits"],
+  "correctionsPt":["3-5 highest-value corrections or interaction habits"],
   "vocab":[
-    {"category":"opinion|reason|example|objection|linker|conclusion","fr":"reusable French phrase","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
+    {"category":"question|followup|opinion|reason|example|objection|linker|conclusion","fr":"reusable French phrase","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
   ]
 }
 
 Requirements:
-- modelA.lines: 7-9 candidate turns/questions showing opening, useful questions, follow-up and closing.
-- modelB.lines: 8-10 lines forming a coherent persuasive response with opinion, reasons, example, objection handling and conclusion.
-- vocab: exactly 12 reusable argumentation phrases targeted to the learner's gaps; avoid narrow topic-specific nouns.
+- modelA.dialogue: 12-16 alternating turns. The candidate opens, asks relevant questions, follows up naturally and closes; the examiner answers briefly and realistically.
+- modelB.dialogue: 14-18 alternating turns. The candidate presents and persuades; the examiner raises realistic doubts/objections one at a time; the candidate reacts, gives reasons/examples and keeps trying to convince.
+- vocab: exactly 12 reusable phrases targeted to the learner's gaps. Include at least 3 question/follow-up structures and at least 5 argumentation/objection/linker structures.
+- Do not make the examiner unrealistically helpful or immediately convinced.
 - Keep French natural and realistic for TEF speaking practice.
 - Portuguese must be European Portuguese.`;
 }
@@ -452,17 +453,31 @@ Return JSON ONLY:
 Return exactly ${safeCount} items. Keep pronunciationPt fields practical for a Portuguese-speaking beginner: syllable separation is allowed, avoid IPA characters, and preserve important French features such as nasal vowels, liaison and silent final consonants as closely as possible.`;
 }
 
-function examinerTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '' }) {
+function examinerTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '', assisted = false }) {
   const rule = section === 'A'
-    ? 'You are the service/provider person in the role-play. Answer the candidate question naturally, briefly, and provide useful information. Do not take over the candidate role. Encourage follow-up only through natural answers.'
-    : 'You are the skeptical friend/interlocutor. The candidate is trying to convince you. Raise one realistic objection or doubt at a time and react naturally to their arguments. Do not become easily convinced too early.';
-  return `You are acting as the TEF Canada oral-expression TRAINING interlocutor. This is practice, not an official exam.
+    ? 'You are the service/provider person in the role-play. Answer the candidate question naturally and briefly. Give only the information that a real interlocutor would give. If the question is vague, ask for clarification. Do not take over the candidate role.'
+    : 'You are the skeptical friend/interlocutor. The candidate is trying to convince you. React naturally, raise ONE realistic objection or doubt at a time, and do not become convinced too early. Vary objections across turns and respond to what the candidate actually said.';
+  const supportRule = assisted
+    ? `This is assisted practice. The spoken examiner reply must STILL be French only. In separate JSON fields, also provide:
+- replyPt: a faithful European Portuguese translation of the examiner reply;
+- helpPt: one short explanation in European Portuguese of what the learner should do next;
+- responseOptions: exactly 2 useful possible candidate responses, each with purposePt, fr, pt and learner-friendly pronunciationPt (no IPA). These are coaching aids and must NOT be spoken by the examiner.`
+    : 'This is unassisted exam-style practice. Return no Portuguese help, translations, suggestions or coaching.';
+  return `You are acting as the TEF Canada oral-expression TRAINING interlocutor. This is practice, not an official examiner.
 Section ${section}. ${rule}
 Task: ${JSON.stringify(task)}
 Conversation history: ${JSON.stringify(history)}
 Candidate just said: ${candidateText}
-Reply ONLY as the interlocutor in natural spoken French. 1-3 short sentences. No coaching, no scoring, no Portuguese.
-Return JSON ONLY: {"replyFr":"...","intent":"answer|clarify|object|challenge|close"}`;
+${supportRule}
+Reply as the interlocutor in natural spoken French, 1-3 short sentences. No scoring.
+Return JSON ONLY:
+{
+  "replyFr":"...",
+  "intent":"answer|clarify|object|challenge|close",
+  "replyPt":${assisted?'"..."':'""'},
+  "helpPt":${assisted?'"..."':'""'},
+  "responseOptions":${assisted?'[{"purposePt":"...","fr":"...","pt":"...","pronunciationPt":"..."}]':'[]'}
+}`;
 }
 
 function multiRaterPrompt(payload, lens) {

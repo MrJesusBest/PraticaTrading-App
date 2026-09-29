@@ -158,8 +158,8 @@
       const notePause=()=>{
         const st=$('#cycleTurnStatus');
         if(st && recorder?.state==='recording')st.textContent=assisted
-          ? 'Pausa detetada — podes continuar a falar. Espero cerca de 3 segundos antes de enviar.'
-          : 'Pausa detetada — podes continuar. Espero um pouco antes de enviar.';
+          ? 'Pausa detetada — continua quando quiseres. Só envio quando carregares TERMINEI — ENVIAR RESPOSTA.'
+          : 'Pausa detetada — podes continuar. Espero cerca de 4 segundos antes de enviar.';
       };
       cycleRecognition.onspeechend=notePause;
       cycleRecognition.onend=notePause;
@@ -186,7 +186,7 @@
       vadLastVoiceAt=vadStartedAt;
       vadHeardVoice=false;
       let hotFrames=0;
-      const silenceMs=assisted?3200:2400;
+      const silenceMs=assisted?999999:4000;
       const minTurnMs=250;
       const threshold=.006;
 
@@ -202,7 +202,7 @@
         }else{
           hotFrames=Math.max(0,hotFrames-1);
         }
-        if(vadHeardVoice && now-vadStartedAt>minTurnMs && now-vadLastVoiceAt>silenceMs){
+        if(!assisted && vadHeardVoice && now-vadStartedAt>minTurnMs && now-vadLastVoiceAt>silenceMs){
           stopVAD();
           stopTurn(section,assisted,true);
           return;
@@ -312,10 +312,10 @@
       <div id="cycleConversation" class="conversation-log"></div>
       <div class="recording-controls">
         <button id="cycleTurnStart" class="record-btn">● Falar / Responder</button>
-        <button id="cycleTurnStop" class="stop-btn" disabled>■ Enviar agora</button>
+        <button id="cycleTurnStop" class="stop-btn" disabled>${assisted?'■ TERMINEI — ENVIAR RESPOSTA':'■ Enviar agora'}</button>
         <button id="cycleFinishSection" class="secondary-btn">Terminar secção e avaliar</button>
       </div>
-      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Podes pensar e fazer pequenas pausas; só envio depois de cerca de 3 s de silêncio.':'Modo exame: fala normalmente. Só envio depois de uma pausa clara, para não cortar a tua resposta.'}</div>
+      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder e fala sem pressa. No treino assistido NÃO envio sozinho: quando acabares toda a resposta, carrega TERMINEI — ENVIAR RESPOSTA.':'Modo exame: fala normalmente. O sistema espera cerca de 4 s de silêncio antes de enviar, para não cortar a tua resposta.'}</div>
       <div id="cycleSectionFeedback"></div>`;
 
     renderConversation(rt,assisted);
@@ -341,7 +341,9 @@
       $('#cycleTurnStart').classList.add('live');
       $('#cycleTurnStart').textContent='● A ouvir-te…';
       $('#cycleTurnStop').disabled=false;
-      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… fala normalmente; podes fazer pequenas pausas para pensar.';
+      $('#cycleTurnStatus').textContent=assisted
+        ? 'A ouvir-te… fala à vontade. Só envio quando carregares TERMINEI — ENVIAR RESPOSTA.'
+        : (auto?'Microfone aberto. Responde agora…':'A ouvir-te… fala normalmente; podes fazer pequenas pausas para pensar.');
       startVAD(section,assisted);
       hardTurnTimer=setTimeout(()=>{
         if(recorder?.state==='recording' && !turnSubmitting){
@@ -349,7 +351,7 @@
           if(st)st.textContent='A fechar este turno para o examinador responder…';
           stopTurn(section,assisted,true,recognizedTurnText);
         }
-      },45000);
+      },assisted?120000:60000);
     }catch(e){
       toast('Não consegui abrir o microfone: '+e.message,'error');
     }
@@ -408,7 +410,7 @@
       $('#cycleTurnStatus').textContent='Examinador a falar…';
       await playStudyPhrase(turn.replyFr,'man');
       if(assisted){
-        $('#cycleTurnStatus').textContent='Tua vez. Consulta a ajuda se precisares e carrega Falar / Responder.';
+        $('#cycleTurnStatus').textContent='Tua vez. Consulta a ajuda se precisares, carrega Falar / Responder e só depois de terminares tudo carrega TERMINEI — ENVIAR RESPOSTA.';
       }else{
         $('#cycleTurnStatus').textContent='Tua vez — a abrir o microfone…';
         setTimeout(()=>startTurn(section,assisted,true),650);

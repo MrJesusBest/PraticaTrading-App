@@ -13,6 +13,7 @@
 
   let recorder=null, chunks=[], stream=null, timer=null, finishing=false;
   let audioCtx=null, analyser=null, vadRaf=null, vadHeardVoice=false, vadLastVoiceAt=0, vadStartedAt=0, turnSubmitting=false;
+  let cycleRecognition=null, recognitionHeardSpeech=false, noVoiceFallbackTimer=null;
 
   function blank(){
     return {
@@ -114,6 +115,9 @@
 
   function stopVAD(){
     if(vadRaf){ cancelAnimationFrame(vadRaf); vadRaf=null; }
+    if(noVoiceFallbackTimer){ clearTimeout(noVoiceFallbackTimer); noVoiceFallbackTimer=null; }
+    if(cycleRecognition){ try{cycleRecognition.onend=null;cycleRecognition.stop();}catch{} cycleRecognition=null; }
+    recognitionHeardSpeech=false;
     if(audioCtx){ try{audioCtx.close();}catch{} }
     audioCtx=null; analyser=null; vadHeardVoice=false; vadLastVoiceAt=0; vadStartedAt=0;
   }
@@ -126,31 +130,67 @@
     recorder=null; stream=null; chunks=[];
   }
 
+  function startSpeechEndDetector(section,assisted){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return;
+    try{
+      cycleRecognition=new SR();
+      cycleRecognition.lang='fr-FR';
+      cycleRecognition.interimResults=true;
+      cycleRecognition.continuous=false;
+      recognitionHeardSpeech=false;
+      cycleRecognition.onresult=e=>{
+        if(e.results?.length)recognitionHeardSpeech=true;
+      };
+      cycleRecognition.onspeechend=()=>{
+        if(recognitionHeardSpeech && recorder?.state==='recording'){
+          setTimeout(()=>stopTurn(section,assisted,true),350);
+        }
+      };
+      cycleRecognition.onend=()=>{
+        if(recognitionHeardSpeech && recorder?.state==='recording'){
+          setTimeout(()=>stopTurn(section,assisted,true),350);
+        }
+      };
+      cycleRecognition.onerror=()=>{};
+      cycleRecognition.start();
+    }catch{}
+  }
+
   function startVAD(section,assisted){
     stopVAD();
+    startSpeechEndDetector(section,assisted);
     const AudioCtx=window.AudioContext||window.webkitAudioContext;
     if(!AudioCtx || !stream || !recorder)return;
     try{
       audioCtx=new AudioCtx();
+      if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
       const source=audioCtx.createMediaStreamSource(stream);
       analyser=audioCtx.createAnalyser();
       analyser.fftSize=1024;
-      analyser.smoothingTimeConstant=.15;
+      analyser.smoothingTimeConstant=.08;
       source.connect(analyser);
       const data=new Uint8Array(analyser.fftSize);
       vadStartedAt=performance.now();
       vadLastVoiceAt=vadStartedAt;
       vadHeardVoice=false;
-      const silenceMs=1850;
-      const minTurnMs=700;
-      const threshold=.022;
+      let hotFrames=0;
+      const silenceMs=1250;
+      const minTurnMs=250;
+      const threshold=.006;
+
       const loop=(now)=>{
         if(!recorder || recorder.state!=='recording'){ stopVAD(); return; }
         analyser.getByteTimeDomainData(data);
         let sum=0;
         for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum+=v*v; }
         const rms=Math.sqrt(sum/data.length);
-        if(rms>threshold){ vadHeardVoice=true; vadLastVoiceAt=now; }
+        if(rms>threshold){
+          hotFrames++;
+          if(hotFrames>=2){ vadHeardVoice=true; vadLastVoiceAt=now; }
+        }else{
+          hotFrames=Math.max(0,hotFrames-1);
+        }
         if(vadHeardVoice && now-vadStartedAt>minTurnMs && now-vadLastVoiceAt>silenceMs){
           stopVAD();
           stopTurn(section,assisted,true);
@@ -159,8 +199,19 @@
         vadRaf=requestAnimationFrame(loop);
       };
       vadRaf=requestAnimationFrame(loop);
+
+      // Safety net: for a very short greeting such as "Bonjour", never leave the UI recording forever.
+      noVoiceFallbackTimer=setTimeout(()=>{
+        if(recorder?.state==='recording' && !turnSubmitting){
+          const status=$('#cycleTurnStatus');
+          if(status)status.textContent='A terminar o teu turno e a enviar…';
+          stopTurn(section,assisted,true);
+        }
+      },6500);
     }catch{
-      stopVAD();
+      noVoiceFallbackTimer=setTimeout(()=>{
+        if(recorder?.state==='recording' && !turnSubmitting)stopTurn(section,assisted,true);
+      },6500);
     }
   }
 
@@ -262,7 +313,7 @@
         <button id="cycleTurnStop" class="stop-btn" disabled>■ Enviar agora</button>
         <button id="cycleFinishSection" class="secondary-btn">Terminar secção e avaliar</button>
       </div>
-      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Quando fizeres uma pausa de ~2 s, envio automaticamente.':'Modo exame: fala normalmente. Depois de uma pausa de ~2 s, o teu turno é enviado automaticamente.'}</div>
+      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Quando fizeres uma pausa de ~1–2 s, envio automaticamente.':'Modo exame: fala normalmente. Depois de uma pausa de ~1–2 s, o teu turno é enviado automaticamente.'}</div>
       <div id="cycleSectionFeedback"></div>`;
 
     renderConversation(rt,assisted);
@@ -288,7 +339,7 @@
       $('#cycleTurnStart').classList.add('live');
       $('#cycleTurnStart').textContent='● A ouvir-te…';
       $('#cycleTurnStop').disabled=false;
-      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… quando parares ~2 s, envio automaticamente.';
+      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… quando parares ~1–2 s, envio automaticamente.';
       startVAD(section,assisted);
     }catch(e){
       toast('Não consegui abrir o microfone: '+e.message,'error');

@@ -12,6 +12,7 @@
   };
 
   let recorder=null, chunks=[], stream=null, timer=null, finishing=false;
+  let audioCtx=null, analyser=null, vadRaf=null, vadHeardVoice=false, vadLastVoiceAt=0, vadStartedAt=0, turnSubmitting=false;
 
   function blank(){
     return {
@@ -111,11 +112,56 @@
     return c.interactions[key];
   }
 
+  function stopVAD(){
+    if(vadRaf){ cancelAnimationFrame(vadRaf); vadRaf=null; }
+    if(audioCtx){ try{audioCtx.close();}catch{} }
+    audioCtx=null; analyser=null; vadHeardVoice=false; vadLastVoiceAt=0; vadStartedAt=0;
+  }
+
   function stopLocalMedia(){
     clearInterval(timer); timer=null;
+    stopVAD();
     if(recorder?.state==='recording'){ try{recorder.stop();}catch{} }
     if(stream){ try{stream.getTracks().forEach(t=>t.stop());}catch{} }
     recorder=null; stream=null; chunks=[];
+  }
+
+  function startVAD(section,assisted){
+    stopVAD();
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx || !stream || !recorder)return;
+    try{
+      audioCtx=new AudioCtx();
+      const source=audioCtx.createMediaStreamSource(stream);
+      analyser=audioCtx.createAnalyser();
+      analyser.fftSize=1024;
+      analyser.smoothingTimeConstant=.15;
+      source.connect(analyser);
+      const data=new Uint8Array(analyser.fftSize);
+      vadStartedAt=performance.now();
+      vadLastVoiceAt=vadStartedAt;
+      vadHeardVoice=false;
+      const silenceMs=1850;
+      const minTurnMs=700;
+      const threshold=.022;
+      const loop=(now)=>{
+        if(!recorder || recorder.state!=='recording'){ stopVAD(); return; }
+        analyser.getByteTimeDomainData(data);
+        let sum=0;
+        for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum+=v*v; }
+        const rms=Math.sqrt(sum/data.length);
+        if(rms>threshold){ vadHeardVoice=true; vadLastVoiceAt=now; }
+        if(vadHeardVoice && now-vadStartedAt>minTurnMs && now-vadLastVoiceAt>silenceMs){
+          stopVAD();
+          stopTurn(section,assisted,true);
+          return;
+        }
+        vadRaf=requestAnimationFrame(loop);
+      };
+      vadRaf=requestAnimationFrame(loop);
+    }catch{
+      stopVAD();
+    }
   }
 
   function remaining(rt){
@@ -212,11 +258,11 @@
       ${assisted?supportCard(task):''}
       <div id="cycleConversation" class="conversation-log"></div>
       <div class="recording-controls">
-        <button id="cycleTurnStart" class="record-btn">● Gravar turno</button>
-        <button id="cycleTurnStop" class="stop-btn" disabled>■ Parar e enviar</button>
+        <button id="cycleTurnStart" class="record-btn">● Falar / Responder</button>
+        <button id="cycleTurnStop" class="stop-btn" disabled>■ Enviar agora</button>
         <button id="cycleFinishSection" class="secondary-btn">Terminar secção e avaliar</button>
       </div>
-      <div id="cycleTurnStatus" class="small-label">${assisted?'Fala em francês. Usa a ajuda PT só quando precisares.':'Modo exame: fala em francês. Não aparece texto da resposta do examinador.'}</div>
+      <div id="cycleTurnStatus" class="small-label">${assisted?'Carrega Falar / Responder. Quando fizeres uma pausa de ~2 s, envio automaticamente.':'Modo exame: fala normalmente. Depois de uma pausa de ~2 s, o teu turno é enviado automaticamente.'}</div>
       <div id="cycleSectionFeedback"></div>`;
 
     renderConversation(rt,assisted);
@@ -228,29 +274,34 @@
     scrollWork();
   }
 
-  async function startTurn(section,assisted){
+  async function startTurn(section,assisted,auto=false){
+    if(turnSubmitting)return;
     if(!navigator.mediaDevices?.getUserMedia){ toast('Microfone indisponível neste browser.','error'); return; }
     try{
-      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
       const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
       recorder=new MediaRecorder(stream,{mimeType:mime});
       chunks=[];
       recorder.ondataavailable=e=>{ if(e.data.size)chunks.push(e.data); };
-      recorder.start(400);
+      recorder.start(300);
       $('#cycleTurnStart').disabled=true;
       $('#cycleTurnStart').classList.add('live');
-      $('#cycleTurnStart').textContent='● A gravar';
+      $('#cycleTurnStart').textContent='● A ouvir-te…';
       $('#cycleTurnStop').disabled=false;
-      $('#cycleTurnStatus').textContent='A gravar…';
+      $('#cycleTurnStatus').textContent=auto?'Microfone aberto. Responde agora…':'A ouvir-te… quando parares ~2 s, envio automaticamente.';
+      startVAD(section,assisted);
     }catch(e){
       toast('Não consegui abrir o microfone: '+e.message,'error');
     }
   }
 
-  async function stopTurn(section,assisted){
+  async function stopTurn(section,assisted,auto=false){
+    if(turnSubmitting)return;
     if(!recorder || recorder.state!=='recording')return;
+    turnSubmitting=true;
+    stopVAD();
     $('#cycleTurnStop').disabled=true;
-    $('#cycleTurnStatus').textContent='A transcrever…';
+    $('#cycleTurnStatus').textContent=auto?'Pausa detetada — a enviar o teu turno…':'A enviar o teu turno…';
     const dataUrl=await new Promise(resolve=>{
       recorder.onstop=()=>{
         const blob=new Blob(chunks,{type:recorder.mimeType});
@@ -289,14 +340,23 @@
 
       $('#cycleTurnStatus').textContent='Examinador a falar…';
       await playStudyPhrase(turn.replyFr,'man');
-      $('#cycleTurnStatus').textContent=assisted?'Tua vez. Responde ou consulta a ajuda PT.':'Tua vez.';
+      if(assisted){
+        $('#cycleTurnStatus').textContent='Tua vez. Consulta a ajuda se precisares e carrega Falar / Responder.';
+      }else{
+        $('#cycleTurnStatus').textContent='Tua vez — a abrir o microfone…';
+        setTimeout(()=>startTurn(section,assisted,true),650);
+      }
     }catch(e){
       toast(friendlyError(e),'error');
       $('#cycleTurnStatus').textContent='Falha neste turno. Podes gravar novamente.';
     }finally{
-      $('#cycleTurnStart').disabled=false;
-      $('#cycleTurnStart').classList.remove('live');
-      $('#cycleTurnStart').textContent='● Gravar turno';
+      turnSubmitting=false;
+      const start=$('#cycleTurnStart');
+      if(start){
+        start.disabled=false;
+        start.classList.remove('live');
+        start.textContent='● Falar / Responder';
+      }
     }
   }
 

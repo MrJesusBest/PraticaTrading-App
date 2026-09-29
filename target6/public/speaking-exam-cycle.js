@@ -38,6 +38,157 @@
   function scoreOf(x){ return Number(x?.evaluation?.overall)||0; }
   function scrollWork(){ setTimeout(()=>workspace()?.scrollIntoView({behavior:'smooth',block:'start'}),80); }
 
+  let sprintReturnFn=null;
+
+  function ensureGuidedUi(){
+    const c=C();
+    if(!c.sprintProgress)c.sprintProgress={};
+    if(!Number.isFinite(c.sprintIndex))c.sprintIndex=0;
+    if(document.getElementById('cycleGuidedUiStyles'))return c;
+    const style=document.createElement('style');
+    style.id='cycleGuidedUiStyles';
+    style.textContent=
+      ".cycle-guide-nav{position:sticky;bottom:10px;z-index:25;margin-top:18px;padding:12px;border:1px solid rgba(127,127,127,.28);border-radius:14px;background:rgba(18,22,31,.96);backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.22)}"+
+      ".cycle-guide-position{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}.cycle-guide-position>div{padding:10px;border-radius:10px;background:rgba(255,255,255,.05)}"+
+      ".cycle-guide-position small{display:block;font-size:.68rem;letter-spacing:.08em;opacity:.68;margin-bottom:4px}.cycle-guide-position strong{display:block;font-size:.88rem}"+
+      ".cycle-guide-actions{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px}.cycle-guide-actions button{min-height:44px}.cycle-vocab-sprint-card{max-width:760px;margin:0 auto}"+
+      ".cycle-vocab-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.cycle-vocab-levels button{min-height:46px}.cycle-sprint-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0}"+
+      "@media(max-width:720px){.cycle-guide-position{grid-template-columns:1fr}.cycle-guide-actions{grid-template-columns:1fr 1fr}.cycle-guide-actions [data-guide-sprint]{grid-column:1/-1;grid-row:1}.cycle-vocab-levels{grid-template-columns:1fr 1fr}}";
+    document.head.appendChild(style);
+    return c;
+  }
+
+  function attachGuideBar(opts){
+    ensureGuidedUi();
+    const w=workspace();
+    if(!w)return;
+    const old=w.querySelector('.cycle-guide-nav');
+    if(old)old.remove();
+    const nav=document.createElement('div');
+    nav.className='cycle-guide-nav';
+    const here=opts?.here||phaseText();
+    const next=opts?.next||'Continuar o ciclo';
+    nav.innerHTML=
+      '<div class="cycle-guide-position">'+
+        '<div><small>ESTÁS AQUI</small><strong>'+escapeHtml(here)+'</strong></div>'+
+        '<div><small>PRÓXIMO PASSO</small><strong>'+escapeHtml(next)+'</strong></div>'+
+      '</div>'+
+      '<div class="cycle-guide-actions">'+
+        '<button class="secondary-btn" data-guide-back>← VOLTAR</button>'+
+        '<button class="secondary-btn" data-guide-sprint>VOCAB SPRINT</button>'+
+        '<button class="primary-btn" data-guide-next>AVANÇAR →</button>'+
+      '</div>';
+    w.appendChild(nav);
+    const back=nav.querySelector('[data-guide-back]');
+    const sprint=nav.querySelector('[data-guide-sprint]');
+    const nextBtn=nav.querySelector('[data-guide-next]');
+    back.disabled=!opts?.onBack;
+    nextBtn.disabled=!opts?.onNext;
+    if(opts?.onBack)back.onclick=opts.onBack;
+    if(opts?.onNext)nextBtn.onclick=opts.onNext;
+    sprint.onclick=()=>openVocabSprint(opts?.onReturn||(()=>resume()));
+  }
+
+  function sprintItems(){
+    const c=ensureGuidedUi();
+    const raw=[
+      ...(Array.isArray(c.model?.vocab)?c.model.vocab:[]),
+      ...(Array.isArray(c.package?.baselineVocab)?c.package.baselineVocab:[]),
+      ...(Array.isArray(c.package?.assisted?.A?.support)?c.package.assisted.A.support:[]),
+      ...(Array.isArray(c.package?.assisted?.B?.support)?c.package.assisted.B.support:[])
+    ];
+    const seen=new Set();
+    const out=[];
+    for(const item of raw){
+      const fr=String(item?.fr||'').trim();
+      if(!fr)continue;
+      const key=fr.toLocaleLowerCase('fr');
+      if(seen.has(key))continue;
+      seen.add(key);
+      out.push({
+        fr,
+        pt:String(item?.pt||item?.purposePt||'').trim(),
+        pronunciationPt:String(item?.pronunciationPt||'').trim(),
+        category:String(item?.category||item?.purposePt||'expressão TEF').trim()
+      });
+    }
+    const rank={unknown:0,recognize:1,use:2,mastered:3};
+    return out.sort((a,b)=>(rank[c.sprintProgress[a.fr]]??0)-(rank[c.sprintProgress[b.fr]]??0)).slice(0,20);
+  }
+
+  function openVocabSprint(returnFn){
+    stopLocalMedia();
+    sprintReturnFn=returnFn||(()=>resume());
+    const c=ensureGuidedUi();
+    const list=sprintItems();
+    if(!list.length){
+      toast('Ainda não há vocabulário disponível neste ciclo.','error');
+      if(sprintReturnFn)sprintReturnFn();
+      return;
+    }
+    c.sprintIndex=Math.max(0,Math.min(c.sprintIndex||0,list.length-1));
+    persist();
+    renderVocabSprint();
+  }
+
+  function returnFromVocabSprint(){
+    const fn=sprintReturnFn;
+    sprintReturnFn=null;
+    if(fn)fn(); else resume();
+  }
+
+  function renderVocabSprint(){
+    const c=ensureGuidedUi(),list=sprintItems(),w=workspace();
+    if(!list.length){returnFromVocabSprint();return;}
+    c.sprintIndex=Math.max(0,Math.min(c.sprintIndex||0,list.length-1));
+    const i=c.sprintIndex,x=list[i],status=c.sprintProgress[x.fr]||'';
+    const counts={unknown:0,recognize:0,use:0,mastered:0};
+    for(const item of list){
+      const s=c.sprintProgress[item.fr];
+      if(counts[s]!==undefined)counts[s]++;
+    }
+    w.className='panel exercise-panel';
+    w.innerHTML=
+      '<div class="cycle-stage-head"><div><div class="cycle-stage-kicker">VOCAB SPRINT · TEF</div><h3>Treino rápido sem perderes o ponto do exame</h3></div><span class="badge">'+(i+1)+'/'+list.length+'</span></div>'+
+      '<div class="cycle-sprint-meta"><span>Não sei: <strong>'+counts.unknown+'</strong></span><span>Reconheço: <strong>'+counts.recognize+'</strong></span><span>Consigo usar: <strong>'+counts.use+'</strong></span><span>Dominadas: <strong>'+counts.mastered+'</strong></span></div>'+
+      '<div class="vocab-card-large cycle-vocab-sprint-card">'+
+        '<span class="vocab-category">'+escapeHtml(x.category||'expressão TEF')+'</span>'+
+        '<div class="vocab-fr" lang="fr">'+escapeHtml(x.fr)+'</div>'+
+        '<div class="hero-actions"><button id="cycleSprintAudio" class="secondary-btn">▶ Ouvir</button><button id="cycleSprintMeaning" class="secondary-btn">Mostrar significado</button></div>'+
+        '<div id="cycleSprintMeaningBox" class="vocab-help hidden">'+
+          (x.pronunciationPt?'<div class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(x.pronunciationPt)+'</div>':'')+
+          '<p>'+escapeHtml(x.pt||'Usa esta expressão numa resposta TEF e tenta explicar o significado pelas palavras à volta.')+'</p>'+
+        '</div>'+
+        '<div class="cycle-vocab-levels">'+
+          '<button class="danger-ghost" data-sprint-level="unknown">NÃO SEI</button>'+
+          '<button class="secondary-btn" data-sprint-level="recognize">RECONHEÇO</button>'+
+          '<button class="secondary-btn" data-sprint-level="use">CONSIGO USAR</button>'+
+          '<button class="primary-btn" data-sprint-level="mastered">DOMINADA</button>'+
+        '</div>'+
+        '<div class="vocab-nav"><button id="cycleSprintPrev" class="secondary-btn" '+(i===0?'disabled':'')+'>← Anterior</button><button id="cycleSprintReturn" class="primary-btn">VOLTAR AO TEF</button><button id="cycleSprintNext" class="secondary-btn" '+(i===list.length-1?'disabled':'')+'>Seguinte →</button></div>'+
+      '</div>';
+    document.getElementById('cycleSprintAudio').onclick=()=>playStudyPhrase(x.fr,'neutral',document.getElementById('cycleSprintAudio'));
+    document.getElementById('cycleSprintMeaning').onclick=()=>{
+      const box=document.getElementById('cycleSprintMeaningBox');
+      const hidden=box.classList.toggle('hidden');
+      document.getElementById('cycleSprintMeaning').textContent=hidden?'Mostrar significado':'Ocultar significado';
+    };
+    document.getElementById('cycleSprintPrev').onclick=()=>{c.sprintIndex--;persist();renderVocabSprint();};
+    document.getElementById('cycleSprintNext').onclick=()=>{c.sprintIndex++;persist();renderVocabSprint();};
+    document.getElementById('cycleSprintReturn').onclick=returnFromVocabSprint;
+    w.querySelectorAll('[data-sprint-level]').forEach(btn=>{
+      btn.onclick=()=>{
+        c.sprintProgress[x.fr]=btn.dataset.sprintLevel;
+        if(i<list.length-1)c.sprintIndex++;
+        persist();
+        renderVocabSprint();
+      };
+    });
+    const active=w.querySelector('[data-sprint-level="'+status+'"]');
+    if(active)active.setAttribute('aria-current','true');
+    scrollWork();
+  }
+
   function renderCyclePanel(){
     const c=C(),status=$('#examCycleStatus'),start=$('#startExamCycle'),reset=$('#resetExamCycle'),sel=$('#cycleDifficulty'),badge=$('#examCycleBadge');
     if(!status||!start)return;
@@ -324,6 +475,16 @@
     $('#cycleTurnStop').onclick=()=>stopTurn(section,assisted);
     $('#cycleFinishSection').onclick=()=>finishInteractive(section,assisted,false);
     startClock(section,assisted);
+    const interactiveBack=assisted
+      ? (section==='B'&&C().assistedResults.A?.evaluation?()=>renderSectionResult('A',true,C().assistedResults.A.evaluation):null)
+      : (section==='A'?()=>renderVocab():(C().finalResults.A?.evaluation?()=>renderSectionResult('A',false,C().finalResults.A.evaluation):()=>renderVocab()));
+    attachGuideBar({
+      here:(assisted?'Passo 1/4 · TEF com ajuda':'Passo 4/4 · TEF sem ajuda')+' · Section '+section,
+      next:section==='A'?'Section B':(assisted?'Passo 2/4 · Exemplo AI':'Resultado final'),
+      onBack:interactiveBack,
+      onNext:()=>finishInteractive(section,assisted,false),
+      onReturn:()=>renderInteractive(section,assisted,false)
+    });
     scrollWork();
   }
 
@@ -488,15 +649,26 @@
     if(!assisted && section==='A')label='CONTINUAR PARA SECTION B SEM AJUDA';
     if(!assisted && section==='B')label='VER RESULTADO FINAL';
     holder.innerHTML=`<div class="cycle-next-box"><div><strong>${escapeHtml(label)}</strong><small>${assisted?'Continua o treino interativo.':'Mantém o modo exame sem ajuda.'}</small></div><button id="cycleEvalNext" class="primary-btn">${escapeHtml(label)}</button></div>`;
-    $('#cycleEvalNext').onclick=()=>{
+    const advanceFromResult=()=>{
       if(assisted && section==='A')renderInteractive('B',true,true);
       else if(assisted && section==='B')generateModel();
       else if(!assisted && section==='A')renderInteractive('B',false,true);
       else finishCycle();
     };
+    $('#cycleEvalNext').onclick=advanceFromResult;
     if(assisted)c.phase=section==='A'?'assistedB':'modelPending';
     else c.phase=section==='A'?'finalB':'completed';
     persist();
+    const resultBack=assisted
+      ? (section==='A'?null:(c.assistedResults.A?.evaluation?()=>renderSectionResult('A',true,c.assistedResults.A.evaluation):null))
+      : (section==='A'?()=>renderVocab():(c.finalResults.A?.evaluation?()=>renderSectionResult('A',false,c.finalResults.A.evaluation):()=>renderVocab()));
+    attachGuideBar({
+      here:(assisted?'Passo 1/4 · Resultado assistido':'Passo 4/4 · Resultado sem ajuda')+' · Section '+section,
+      next:section==='A'?'Section B':(assisted?'Passo 2/4 · Exemplo AI':'Resumo final'),
+      onBack:resultBack,
+      onNext:advanceFromResult,
+      onReturn:()=>renderSectionResult(section,assisted,evaluation)
+    });
     scrollWork();
   }
 
@@ -557,7 +729,15 @@
       const obj=b.dataset.section==='A'?m.modelA:m.modelB;
       b.onclick=()=>playDialogue(obj,b);
     });
-    $('#cycleToVocab').onclick=()=>{c.phase='vocab';persist();renderVocab();};
+    const advanceToVocab=()=>{c.phase='vocab';persist();renderVocab();};
+    $('#cycleToVocab').onclick=advanceToVocab;
+    attachGuideBar({
+      here:'Passo 2/4 · Exemplo AI',
+      next:'Passo 3/4 · Vocabulário',
+      onBack:c.assistedResults.B?.evaluation?()=>renderSectionResult('B',true,c.assistedResults.B.evaluation):null,
+      onNext:advanceToVocab,
+      onReturn:renderModel
+    });
     scrollWork();
   }
 
@@ -594,7 +774,15 @@
     $('#cycleVocabNext').onclick=()=>{c.vocabIndex++;persist();renderVocab();};
     $('#cycleVocabReview').onclick=()=>{c.vocabProgress[i]='review';if(i<list.length-1)c.vocabIndex++;persist();renderVocab();};
     $('#cycleVocabKnown').onclick=()=>{c.vocabProgress[i]='known';if(i<list.length-1)c.vocabIndex++;persist();renderVocab();};
-    $('#cycleStartFinal').onclick=()=>renderInteractive('A',false,true);
+    const advanceToFinal=()=>renderInteractive('A',false,true);
+    $('#cycleStartFinal').onclick=advanceToFinal;
+    attachGuideBar({
+      here:'Passo 3/4 · Vocabulário',
+      next:'Passo 4/4 · TEF sem ajuda',
+      onBack:()=>renderModel(),
+      onNext:advanceToFinal,
+      onReturn:renderVocab
+    });
     scrollWork();
   }
 
@@ -622,6 +810,13 @@
     $('#cycleReviewVocab').onclick=()=>{c.phase='vocab';c.active=true;persist();renderVocab();};
     $('#cycleToPlan').onclick=()=>navigate('plan');
     $('#cycleNew').onclick=resetCycle;
+    attachGuideBar({
+      here:'Ciclo concluído',
+      next:'Plano AI',
+      onBack:c.finalResults.B?.evaluation?()=>renderSectionResult('B',false,c.finalResults.B.evaluation):()=>renderVocab(),
+      onNext:()=>navigate('plan'),
+      onReturn:renderSummary
+    });
     scrollWork();
   }
 

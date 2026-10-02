@@ -480,6 +480,74 @@ Return JSON ONLY:
 }`;
 }
 
+function tefCoachTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '', coachMode = 'full' }) {
+  const mode = ['full','minimal','final'].includes(String(coachMode)) ? String(coachMode) : 'full';
+  const rule = section === 'A'
+    ? 'You are the service/provider person in the role-play. Answer the candidate question naturally and briefly. Give only the information a real interlocutor would give. If the question is vague, ask for clarification. Do not take over the candidate role.'
+    : 'You are the skeptical friend/interlocutor. The candidate is trying to convince you. React naturally, raise ONE realistic objection or doubt at a time, and do not become convinced too early. Vary objections across turns and respond to what the candidate actually said.';
+  const support = mode === 'full'
+    ? 'FULL COACH: Portuguese translation and two possible next responses are allowed in separate coaching fields.'
+    : mode === 'minimal'
+      ? 'MINIMAL COACH: no Portuguese translation of the examiner reply and no ready-made response options. Only a progressive hint may be supplied when a high-value correction is needed.'
+      : 'FINAL EXAM: no coaching, no translation, no hints, no suggested answers, and coach.intervene must be false.';
+  const responseOptionsShape = mode === 'full'
+    ? '[{"purposePt":"...","fr":"...","pt":"...","pronunciationPt":"..."},{"purposePt":"...","fr":"...","pt":"...","pronunciationPt":"..."}]'
+    : '[]';
+  const lines = [
+    'You are the TEF AI COACH for ORIGINAL TEF Canada oral-expression training. This is practice, not an official examiner.',
+    'Section ' + section + '. ' + rule,
+    'Task: ' + JSON.stringify(task),
+    'Conversation history: ' + JSON.stringify(history),
+    'Candidate just said: ' + candidateText,
+    'Coach mode: ' + mode + '. ' + support,
+    '',
+    'Act as two coordinated roles in ONE response:',
+    '1) the realistic French interlocutor;',
+    '2) a restrained language coach that intervenes only when it materially helps the learner perform the TEF task.',
+    '',
+    'COACHING RULES:',
+    '- Never interrupt for every small mistake. Preserve conversational flow.',
+    '- Pick at most ONE highest-value issue from this candidate turn.',
+    '- Intervene only for a meaning-blocking vocabulary gap, a materially wrong reusable structure, a task-strategy failure, or a recurring error worth drilling.',
+    '- If the transcript looks incomplete, garbled, or plausibly caused by speech recognition, set coach.intervene=false and coach.confidence="low". Do not teach a correction from uncertain transcription.',
+    '- Minor article/agreement mistakes that do not damage meaning should normally be left for end-of-section feedback.',
+    '- In full mode, medium or high priority intervention is allowed.',
+    '- In minimal mode, intervene only for high-priority issues; otherwise let the conversation continue.',
+    '- The correction must be short enough to repeat in roughly 15-45 seconds.',
+    '- Extract 0-3 useful vocabulary items/phrases from the problem so they can be reviewed later.',
+    '- Do not claim to evaluate pronunciation from transcript text.',
+    '',
+    'Reply as the interlocutor in natural spoken French, 1-3 short sentences.',
+    '',
+    'Return JSON ONLY:',
+    '{',
+    '  "replyFr":"natural French interlocutor reply",',
+    '  "intent":"answer|clarify|object|challenge|close",',
+    '  "replyPt":' + (mode === 'full' ? '"faithful European Portuguese translation"' : '""') + ',',
+    '  "helpPt":' + (mode === 'full' ? '"one short PT instruction for what to do next"' : '""') + ',',
+    '  "responseOptions":' + responseOptionsShape + ',',
+    '  "coach":{',
+    '    "intervene":' + (mode === 'final' ? 'false' : 'true') + ',',
+    '    "confidence":"low|medium|high",',
+    '    "priority":"low|medium|high",',
+    '    "issueType":"vocabulary|grammar|task_strategy|clarity|none",',
+    '    "whyPt":"short European Portuguese explanation",',
+    '    "originalFr":"exact problematic fragment, or empty",',
+    '    "correctedFr":"one natural reusable French sentence to repeat, or empty",',
+    '    "meaningPt":"European Portuguese meaning of correctedFr, or empty",',
+    '    "pronunciationPt":"easy PT-friendly sound cue, no IPA, or empty",',
+    '    "hintWord":"one key French word only, or empty",',
+    '    "hintStart":"first useful 2-5 French words of correctedFr, or empty",',
+    '    "vocab":[{"fr":"useful word or short phrase","pt":"European Portuguese meaning","pronunciationPt":"easy PT-friendly sound cue, no IPA"}]',
+    '  }',
+    '}',
+    '',
+    'For FINAL EXAM mode, return empty coaching strings/arrays and coach.intervene=false.',
+    'For FULL/MINIMAL, if no intervention is warranted, set coach.intervene=false, issueType="none", correctedFr="", hintWord="", hintStart="", vocab=[].'
+  ];
+  return lines.join('\n');
+}
+
 function multiRaterPrompt(payload, lens) {
   return `${speakingEvaluationPrompt(payload)}\nAdditional rater lens: ${lens}. Be independent and conservative. Return the exact same JSON shape.`;
 }
@@ -602,6 +670,25 @@ async function handleApi(req, res, pathname) {
       evaluation.achieved = Boolean(evaluation.achieved) && evaluation.score >= 70;
       if (!evaluation.correctedFr) evaluation.correctedFr = modelFr;
       return sendJson(res, 200, { evaluation });
+    }
+
+    if (pathname === '/api/tef-coach-turn') {
+      const candidateText = String(body.candidateText || '').trim();
+      if (!candidateText) throw new Error('Candidate turn is empty');
+      const coachMode = ['full','minimal','final'].includes(String(body.coachMode || '')) ? String(body.coachMode) : 'full';
+      const text = await openAIResponse(tefCoachTurnPrompt({ ...body, candidateText, coachMode }), ROUTINE_MODEL);
+      const turn = extractJson(text);
+      if (!turn.replyFr) throw new Error('TEF AI Coach returned no interlocutor reply');
+      if (!turn.coach || typeof turn.coach !== 'object') turn.coach = { intervene:false, confidence:'low', priority:'low', issueType:'none', vocab:[] };
+      if (coachMode === 'final') {
+        turn.replyPt = '';
+        turn.helpPt = '';
+        turn.responseOptions = [];
+        turn.coach = { intervene:false, confidence:'high', priority:'low', issueType:'none', whyPt:'', originalFr:'', correctedFr:'', meaningPt:'', pronunciationPt:'', hintWord:'', hintStart:'', vocab:[] };
+      }
+      if (!Array.isArray(turn.responseOptions)) turn.responseOptions = [];
+      if (!Array.isArray(turn.coach.vocab)) turn.coach.vocab = [];
+      return sendJson(res, 200, { turn });
     }
 
     if (pathname === '/api/examiner-turn') {

@@ -576,7 +576,7 @@
   function renderStageResult(stage,evaluation){
     const w=workspace();
     w.className='panel exercise-panel';
-    w.innerHTML='<div id="coachEvaluation"></div>' +
+    w.innerHTML='<div id="speakingFeedback"></div>' +
       '<div class="cycle-next-box"><div><strong>Próximo: '+escapeHtml(stage.next)+'</strong><small>'+
       (stage.mode==='full'?'Agora repetes exatamente a mesma tarefa com menos ajuda.':stage.mode==='minimal'?'Mantemos o que aprendeste e avançamos.':'Continuamos a prova sem ajuda.')+
       '</small></div><button id="coachNextStage" class="primary-btn">AVANÇAR</button></div>';

@@ -15,6 +15,7 @@
   let hardStopTimer = null;
   let recordContext = null;
   let submitting = false;
+  let stageClockTimer = null;
 
   function fresh(){
     return {
@@ -86,6 +87,8 @@
         evaluation:null,
         helpIndex:0,
         helpLevel:0,
+        guideStep:0,
+        guideCompleted:false,
         pending:null
       };
     }
@@ -113,6 +116,11 @@
       '.coach-metrics span{display:block;font-size:.72rem;opacity:.7}.coach-metrics strong{font-size:1.05rem}' +
       '.coach-optional{margin-top:16px}.coach-optional button{width:100%}' +
       '.coach-hidden-tools{display:none!important}' +
+      '.coach-time-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04)}' +
+      '.coach-guided-card{margin:14px 0;padding:16px;border-radius:16px;background:rgba(23,185,120,.08);border:1px solid rgba(23,185,120,.34)}' +
+      '.coach-guided-card .guided-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.coach-guided-card .guided-head strong{font-size:1rem}' +
+      '.coach-guided-block{padding:11px 12px;margin:8px 0;border-radius:11px;background:rgba(255,255,255,.05)}.coach-guided-block small{display:block;opacity:.72;margin-bottom:4px}.coach-guided-block strong{display:block;line-height:1.45}' +
+      '.coach-guided-map{margin-top:10px}.coach-guided-map summary{cursor:pointer;font-weight:700}.coach-guided-map-row{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}.coach-guided-map-row.active{font-weight:700}' +
       '@media(max-width:760px){.tef-coach-progress,.coach-metrics{grid-template-columns:1fr}.coach-hints{grid-template-columns:1fr}}';
     document.head.appendChild(st);
   }
@@ -172,13 +180,82 @@
     return '<div class="tef-coach-progress">'+names.map((x,i)=>'<div class="'+(i===group?'active':'')+'">'+x+'</div>').join('')+'</div>';
   }
 
+  function targetSeconds(section){
+    return section==='A'?300:600;
+  }
+
+  function guidedPlan(task){
+    const plan=Array.isArray(task?.guidedPlan)?task.guidedPlan.filter(x=>x?.sayFr):[];
+    if(plan.length)return plan;
+    const support=Array.isArray(task?.support)?task.support:[];
+    return support.map((x,i)=>({
+      phasePt:i===0?'Abertura':'Continuar conversa',
+      goalPt:x.purposePt||'Usar esta estrutura na conversa',
+      sayFr:x.fr||'',
+      sayPt:x.pt||'',
+      pronunciationPt:x.pronunciationPt||'',
+      listenForPt:'Ouve a resposta e identifica a informação principal antes de continuar.',
+      bridgeFr:i===0?'Très bien, merci.':'D’accord, merci.',
+      bridgePt:i===0?'Muito bem, obrigado.':'Está bem, obrigado.',
+      rescueFr:x.fr||''
+    }));
+  }
+
+  function guideIndex(rt,plan){
+    if(!plan.length)return 0;
+    return Math.max(0,Math.min(Number(rt.guideStep)||0,plan.length-1));
+  }
+
+  function renderGuidedStep(stage,task,rt){
+    if(stage.mode!=='full')return;
+    const holder=$('#coachGuidedStep');
+    if(!holder)return;
+    const plan=guidedPlan(task);
+    if(!plan.length){
+      holder.innerHTML='<div class="feedback">Este ciclo antigo não tem ainda o mapa completo. Inicia um novo ciclo para receber o guia passo a passo.</div>';
+      return;
+    }
+    const idx=guideIndex(rt,plan),step=plan[idx];
+    const done=Boolean(rt.guideCompleted);
+    holder.innerHTML='<div class="coach-guided-card">'+
+      '<div class="guided-head"><div><div class="small-label">GUIA DA CONVERSA · '+(stage.section==='A'?'5 MIN':'10 MIN')+'</div><strong>'+(done?'MAPA COMPLETO — fecha naturalmente a conversa':'PASSO '+(idx+1)+'/'+plan.length+' · '+escapeHtml(step.phasePt||''))+'</strong></div><span class="badge">'+Math.round(((done?plan.length:idx)/plan.length)*100)+'%</span></div>'+
+      (done
+        ? '<div class="coach-guided-block"><small>AGORA</small><strong>Já percorreste todos os passos. Faz uma reação final natural e termina a secção quando estiveres pronto.</strong></div>'
+        : '<div class="coach-guided-block"><small>1 · O QUE FAZER AGORA</small><strong>'+escapeHtml(step.goalPt||'Continua a conversa.')+'</strong></div>'+
+          '<div class="coach-guided-block"><small>2 · PODES DIZER ISTO</small><strong lang="fr">'+escapeHtml(step.sayFr||'')+'</strong>'+
+            (step.pronunciationPt?'<span class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(step.pronunciationPt)+'</span>':'')+
+            (step.sayPt?'<p>'+escapeHtml(step.sayPt)+'</p>':'')+
+            '<button id="coachGuideSayAudio" class="secondary-btn compact">▶ OUVIR ESTE TURNO</button></div>'+
+          '<div class="coach-guided-block"><small>3 · QUANDO ELE RESPONDER, OUVE ISTO</small><strong>'+escapeHtml(step.listenForPt||'A informação principal da resposta.')+'</strong></div>'+
+          '<div class="coach-guided-block"><small>4 · REAGE E LIGA À PRÓXIMA IDEIA</small><strong lang="fr">'+escapeHtml(step.bridgeFr||'D’accord, merci.')+'</strong>'+(step.bridgePt?'<p>'+escapeHtml(step.bridgePt)+'</p>':'')+'<button id="coachGuideBridgeAudio" class="secondary-btn compact">▶ OUVIR LIGAÇÃO</button></div>'+
+          '<div class="coach-guided-block"><small>5 · SE BLOQUEARES</small><strong lang="fr">'+escapeHtml(step.rescueFr||step.sayFr||'')+'</strong></div>')+
+      '<details class="coach-guided-map"><summary>Ver mapa completo da conversa</summary>'+
+        plan.map((x,i)=>'<div class="coach-guided-map-row '+(i===idx&&!done?'active':'')+'"><span>'+(i+1)+'</span><span>'+escapeHtml(x.phasePt||'Passo')+' — '+escapeHtml(x.goalPt||'')+'</span></div>').join('')+
+      '</details></div>';
+    if($('#coachGuideSayAudio'))$('#coachGuideSayAudio').onclick=()=>playStudyPhrase(step.sayFr,'neutral',$('#coachGuideSayAudio'));
+    if($('#coachGuideBridgeAudio'))$('#coachGuideBridgeAudio').onclick=()=>playStudyPhrase(step.bridgeFr,'neutral',$('#coachGuideBridgeAudio'));
+  }
+
+  function startStageClock(stage,rt){
+    clearInterval(stageClockTimer);
+    const target=targetSeconds(stage.section);
+    const tick=()=>{
+      const el=$('#coachStageClock');
+      if(!el)return;
+      const elapsed=Math.max(0,Math.floor((Date.now()-rt.startedAt)/1000));
+      el.textContent=formatTime(elapsed)+' / '+formatTime(target);
+    };
+    tick();
+    stageClockTimer=setInterval(tick,1000);
+  }
+
   function renderSupport(stage, task, rt){
     if(stage.mode === 'final') return '';
     if(stage.mode === 'full'){
-      const support=Array.isArray(task.support)?task.support.slice(0,6):[];
-      return '<div class="assisted-help-card"><h4>AJUDA DISPONÍVEL</h4>' +
-        '<div class="assisted-translation"><strong>Em português:</strong><br>'+escapeHtml(task.promptPt||'')+'</div>' +
-        '<div class="support-phrase-list">'+support.map((x,i)=>'<div class="support-phrase"><button class="mini-audio coach-support-audio" data-i="'+i+'">🔊</button><div><span class="support-purpose">'+escapeHtml(x.purposePt||'Frase útil')+'</span><strong lang="fr">'+escapeHtml(x.fr||'')+'</strong><small class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(x.pronunciationPt||'')+'</small><small>'+escapeHtml(x.pt||'')+'</small></div></div>').join('')+'</div></div>';
+      return '<div class="assisted-help-card"><h4>EXAME GUIADO — EU DIGO-TE O QUE FAZER EM CADA PASSO</h4>'+
+        '<div class="assisted-translation"><strong>Consigne em português:</strong><br>'+escapeHtml(task.promptPt||'')+'</div>'+
+        (task.roadmapPt?'<p><strong>Estrutura completa:</strong> '+escapeHtml(task.roadmapPt)+'</p>':'')+
+        '<div id="coachGuidedStep"></div><div id="coachDemandHint"></div></div>';
     }
     return '<div class="assisted-help-card"><h4>AJUDA MÍNIMA</h4><p>Faz primeiro sozinho. Se bloqueares, carrega <strong>PRECISO DE UMA PISTA</strong>. A ajuda abre por níveis, não entrega logo a resposta.</p><div id="coachDemandHint"></div></div>';
   }
@@ -228,6 +305,7 @@
       '<div class="cycle-stage-head"><div><div class="cycle-stage-kicker">TEF AI COACH</div><h3>SPEAKING · SECTION '+stage.section+'</h3></div><span class="badge">'+escapeHtml(c.difficulty)+'</span></div>' +
       progressHtml(stage) +
       '<div class="tef-coach-mode '+info.cls+'"><strong>'+info.title+'</strong><span>'+info.subtitle+'</span></div>' +
+      '<div class="coach-time-row"><span>RITMO DA CONVERSA</span><strong id="coachStageClock">00:00 / '+formatTime(targetSeconds(stage.section))+'</strong></div>' +
       '<div class="task-card"><h4>Consigne</h4><div class="task-prompt">'+escapeHtml(task.promptFr||'')+'</div>' +
         (stage.mode==='full' && task.prepTipPt?'<p><small><strong>Guia:</strong> '+escapeHtml(task.prepTipPt)+'</small></p>':'')+
       '</div>' +
@@ -245,6 +323,8 @@
       '</div>';
 
     renderConversation(stage,rt);
+    renderGuidedStep(stage,task,rt);
+    startStageClock(stage,rt);
     const support=Array.isArray(task.support)?task.support:[];
     $$('.coach-support-audio',w).forEach(btn=>{
       const x=support[Number(btn.dataset.i)];
@@ -259,21 +339,29 @@
   }
 
   function showDemandHelp(stage,task,rt){
-    const list=Array.isArray(task.support)?task.support:[];
-    if(!list.length){ toast('Não tenho uma pista pronta para esta tarefa.','error'); return; }
-    const x=list[rt.helpIndex % list.length];
-    rt.helpLevel=(rt.helpLevel||0)+1;
-    if(rt.helpLevel>3){ rt.helpLevel=1; rt.helpIndex++; }
-    S().helpTaps++;
-    persist();
     const box=$('#coachDemandHint');
-    if(stage.mode==='full'){
-      box.innerHTML='<div class="coach-hint-box"><strong>'+escapeHtml(x.fr||'')+'</strong><small class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(x.pronunciationPt||'')+'</small><p>'+escapeHtml(x.pt||x.purposePt||'')+'</p></div>';
-    }else{
-      const words=String(x.fr||'').split(/\s+/);
-      const val=rt.helpLevel===1 ? words.slice(0,1).join(' ') : rt.helpLevel===2 ? words.slice(0,3).join(' ')+'…' : x.fr;
-      box.innerHTML='<div class="coach-hint-box"><strong>Pista '+rt.helpLevel+'/3:</strong> <span lang="fr">'+escapeHtml(val||'')+'</span></div>';
+    const plan=guidedPlan(task);
+    if(plan.length){
+      const idx=stage.mode==='full'?guideIndex(rt,plan):Math.min(rt.candidateTurns.length,plan.length-1);
+      const x=plan[idx];
+      rt.helpLevel=(rt.helpLevel||0)+1;
+      if(rt.helpLevel>3)rt.helpLevel=1;
+      S().helpTaps++;
+      persist();
+      const words=String(x.sayFr||'').split(/\s+/);
+      if(rt.helpLevel===1){
+        box.innerHTML='<div class="coach-hint-box"><strong>Pista 1/3 · palavra:</strong> <span lang="fr">'+escapeHtml(words[0]||'')+'</span></div>';
+      }else if(rt.helpLevel===2){
+        box.innerHTML='<div class="coach-hint-box"><strong>Pista 2/3 · começa assim:</strong> <span lang="fr">'+escapeHtml(words.slice(0,4).join(' '))+'…</span></div>';
+      }else{
+        box.innerHTML='<div class="coach-hint-box"><strong>Pista 3/3 · turno completo:</strong><strong lang="fr">'+escapeHtml(x.sayFr||'')+'</strong>'+
+          (x.pronunciationPt?'<small class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(x.pronunciationPt)+'</small>':'')+
+          (x.sayPt?'<p>'+escapeHtml(x.sayPt)+'</p>':'')+'<button id="coachDemandAudio" class="secondary-btn compact">▶ OUVIR</button></div>';
+        $('#coachDemandAudio').onclick=()=>playStudyPhrase(x.sayFr,'neutral',$('#coachDemandAudio'));
+      }
+      return;
     }
+    toast('Não tenho uma pista pronta para esta tarefa.','error');
   }
 
   async function startRecording(ctx){
@@ -328,6 +416,7 @@
 
   function stopMedia(){
     clearTimeout(hardStopTimer); hardStopTimer=null;
+    clearInterval(stageClockTimer); stageClockTimer=null;
     if(recorder?.state==='recording'){ try{recorder.stop();}catch{} }
     if(stream){ try{stream.getTracks().forEach(t=>t.stop());}catch{} }
     recorder=null; stream=null; chunks=[]; recordContext=null;
@@ -390,7 +479,8 @@
         task:taskFor(stage),
         history,
         candidateText,
-        coachMode:stage.mode
+        coachMode:stage.mode,
+        nextGuideStep:stage.mode==='full'?guidedPlan(taskFor(stage))[Math.min((rt.guideStep||0)+1,guidedPlan(taskFor(stage)).length-1)]||null:null
       });
       const turn=out.turn;
       if(shouldIntervene(stage,turn.coach)){
@@ -523,12 +613,28 @@
     const status=$('#coachStatus');
     if(status) status.textContent='Interlocutor a responder…';
     await playStudyPhrase(turn.replyFr,'man');
-    if(status) status.textContent=stage.mode==='final'?'Tua vez. Sem ajuda.':'Tua vez. Continua a conversa.';
+    if(stage.mode==='full'){
+      const plan=guidedPlan(taskFor(stage));
+      if(plan.length){
+        if((rt.guideStep||0) >= plan.length-1) rt.guideCompleted=true;
+        else rt.guideStep=(rt.guideStep||0)+1;
+        rt.helpLevel=0;
+        persist();
+        renderGuidedStep(stage,taskFor(stage),rt);
+      }
+    }
+    if(status) status.textContent=stage.mode==='final'?'Tua vez. Sem ajuda.':stage.mode==='full'?'Tua vez. Segue o próximo passo do guia.':'Tua vez. Continua a conversa.';
   }
 
   async function finishStage(stage){
     const rt=runtime(stage);
     if(rt.pending){ toast('Termina primeiro a correção rápida.','error'); return; }
+    if(stage.mode==='full' && guidedPlan(taskFor(stage)).length && !rt.guideCompleted){
+      const plan=guidedPlan(taskFor(stage));
+      const left=Math.max(1,plan.length-(rt.guideStep||0));
+      toast('Ainda faltam '+left+' passos do guia. Completa a conversa para treinares a secção inteira.','error');
+      return;
+    }
     if(!rt.candidateTurns.length){ toast('Fala pelo menos uma vez antes de terminar esta secção.','error'); return; }
     stopMedia();
     const w=workspace();

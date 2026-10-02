@@ -636,6 +636,13 @@
     $('#coachPlanFromReview').onclick=()=>navigate('plan');
   }
 
+  function renderCoachLanding(){
+    const w=workspace();
+    if(!w) return;
+    w.className='panel exercise-panel empty-state';
+    w.innerHTML='<div class="empty-icon">AI</div><h3>TEF AI COACH</h3><p>Carrega <strong>COMEÇAR TREINO TEF DE HOJE</strong>. O sistema guia-te por ajuda → correção → repetição → exame sem ajuda.</p>';
+  }
+
   function resume(){
     const c=S();
     if(!c.package){ startNew(); return; }
@@ -645,14 +652,17 @@
   }
 
   function hideOptionalTools(){
+    const pathPanel=document.querySelector('#speakingPathOverview');
     const modePanel=document.querySelector('.speaking-mode-panel');
     const freeGrid=modePanel?.nextElementSibling;
+    if(pathPanel) pathPanel.classList.add('coach-hidden-tools');
     if(modePanel) modePanel.classList.add('coach-hidden-tools');
     if(freeGrid?.classList?.contains('top-grid')) freeGrid.classList.add('coach-hidden-tools');
     const btn=$('#toggleSpeakingTools');
     if(btn){
       btn.onclick=()=>{
         const hidden=modePanel?.classList.contains('coach-hidden-tools');
+        pathPanel?.classList.toggle('coach-hidden-tools',!hidden);
         modePanel?.classList.toggle('coach-hidden-tools',!hidden);
         freeGrid?.classList.toggle('coach-hidden-tools',!hidden);
         btn.textContent=hidden?'OCULTAR TREINO LIVRE':'ABRIR TREINO LIVRE (OPCIONAL)';
@@ -664,6 +674,8 @@
     injectStyles();
     renderPanel();
     hideOptionalTools();
+    if(S().active || S().completedAt) setTimeout(resume,60);
+    else setTimeout(renderCoachLanding,60);
     $('#startTefCoach')?.addEventListener('click',()=>{
       const c=S();
       if(c.active || c.completedAt) resume();
@@ -679,7 +691,7 @@
         w.innerHTML='<div class="empty-icon">AI</div><h3>TEF AI COACH reiniciado.</h3><p>Escolhe a dificuldade e começa quando quiseres.</p>';
       }
     });
-    $('.nav-item[data-page="speaking"]')?.addEventListener('click',()=>setTimeout(()=>{ renderPanel(); hideOptionalTools(); if(S().active||S().completedAt) resume(); },50));
+    $('.nav-item[data-page="speaking"]')?.addEventListener('click',()=>setTimeout(()=>{ renderPanel(); hideOptionalTools(); if(S().active||S().completedAt) resume(); else renderCoachLanding(); },60));
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire);

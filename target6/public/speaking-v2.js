@@ -127,7 +127,7 @@
     if(n.mode==='learn') renderDrill(nextSkill(n.section),false);
     else if(n.mode==='guided'){ guidedIndex=0; renderDrill(curriculum[n.section][0],true); }
     else {
-      const difficulty=$('#speakingDifficulty')?.value||'B1';
+      const difficulty=window.getAdaptiveTrainingDifficulty?.('speaking')||'B1';
       showSimulationLoading(difficulty);
       generateSpeakingTask({section:n.section,difficulty,button:sourceButton||$('#startSpeakingTraining')});
     }
@@ -136,7 +136,7 @@
   function showSimulationLoading(difficulty){
     const w=$('#speakingWorkspace'); if(!w)return;
     w.className='panel exercise-panel sim-loading';
-    w.innerHTML=`<span class="loader"></span><strong>A preparar Simulação TEF · ${escapeHtml(difficulty)}</strong><small>Aguarda alguns segundos. O botão fica bloqueado para evitar duplo clique.</small>`;
+    w.innerHTML=`<span class="loader"></span><strong>A preparar Simulação TEF</strong><small>Nível adaptado automaticamente ao teu progresso.</small>`;
   }
 
   function renderDrill(skill,guided=false){
@@ -235,7 +235,7 @@
       guidedIndex=0; renderDrill(curriculum[sec][0],true); return;
     }
     if(!flow.examReady(T(),ids)) toast('Simulação aberta em modo de estudo. O AI Coach continua a recomendar os pontos que faltam.','ok');
-    const difficulty=$('#speakingDifficulty')?.value||'B1';
+    const difficulty=window.getAdaptiveTrainingDifficulty?.('speaking')||'B1';
     showSimulationLoading(difficulty);
     generateSpeakingTask({section:sec,difficulty,button:sourceButton});
   }

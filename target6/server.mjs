@@ -662,6 +662,10 @@ async function handleApi(req, res, pathname) {
       if (!cycle?.assisted?.A?.promptFr || !cycle?.assisted?.B?.promptFr || !cycle?.final?.A?.promptFr || !cycle?.final?.B?.promptFr) {
         throw new Error('Generated speaking cycle failed validation');
       }
+      if (!Array.isArray(cycle.assisted.A.guidedPlan) || cycle.assisted.A.guidedPlan.length !== 9 ||
+          !Array.isArray(cycle.assisted.B.guidedPlan) || cycle.assisted.B.guidedPlan.length !== 12) {
+        throw new Error('Generated guided conversation roadmap failed validation');
+      }
       return sendJson(res, 200, { cycle });
     }
 

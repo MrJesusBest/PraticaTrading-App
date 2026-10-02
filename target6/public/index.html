@@ -197,39 +197,40 @@
 
       <section id="page-speaking" class="page">
         <div class="quick-guide">
-          <div class="guide-head"><span>SPEAKING PROGRESSIVO</span><strong>Primeiro aprendes a falar. Só depois fazemos o exame completo.</strong></div>
+          <div class="guide-head"><span>TEF AI COACH</span><strong>Um único caminho: tenta → recebe a ajuda certa → corrige → repete → faz sozinho.</strong></div>
           <div class="guide-steps">
-            <div><b>1</b><span><strong>APRENDER:</strong> ouve e repete uma frase de cada vez.</span></div>
-            <div><b>2</b><span><strong>CORRIGIR:</strong> a AI identifica o erro e obriga a repetir.</span></div>
-            <div><b>3</b><span><strong>TREINO GUIADO:</strong> pequenas interações com cada vez menos ajuda.</span></div>
-            <div><b>4</b><span><strong>SIMULAÇÃO TEF:</strong> só quando a base estiver consistente.</span></div>
+            <div><b>1</b><span><strong>COM AJUDA:</strong> fazes a tarefa TEF com português e dicas.</span></div>
+            <div><b>2</b><span><strong>CORREÇÃO AO VIVO:</strong> a AI pára apenas num erro importante e cria um microexercício de 15–45 s.</span></div>
+            <div><b>3</b><span><strong>AJUDA MÍNIMA:</strong> repetes a mesma tarefa usando só pistas quando bloqueias.</span></div>
+            <div><b>4</b><span><strong>SEM AJUDA:</strong> recebes uma tarefa nova em modo simulação.</span></div>
           </div>
-          <div class="guide-tip"><strong>Regra:</strong> não saltamos uma fraqueza. O sistema volta às estruturas erradas em 1, 3, 7, 14 e 30 dias conforme fores dominando.</div>
+          <div class="guide-tip"><strong>Automático:</strong> palavras e estruturas que te bloquearem entram na tua revisão. Speaking Section A = obter informações; Section B = argumentar para convencer.</div>
         </div>
 
-        <div id="examCyclePanel" class="panel exam-cycle-panel">
+        <div id="tefAiCoachPanel" class="panel exam-cycle-panel">
           <div class="panel-head">
             <div>
-              <div class="small-label">CICLO EXAME TEF · RECOMENDADO</div>
-              <h3>Ajuda PT → Exemplo AI → Vocabulário → Exame sem ajuda</h3>
+              <div class="small-label">CAMINHO PRINCIPAL · TEF AI COACH</div>
+              <h3>Treina como com um professor: ajuda → correção imediata → menos ajuda → exame</h3>
             </div>
-            <span id="examCycleBadge" class="badge">4 PASSOS</span>
+            <span class="badge">AI COACH</span>
           </div>
-          <p>Faz primeiro o formato com ajuda total em português. Depois ouve e lê um exemplo forte, treina o vocabulário de argumentação e termina com uma prova nova sem qualquer ajuda.</p>
+          <p>Não tens de escolher entre vários modos. O sistema decide quando ajudar, quando corrigir e quando retirar as ajudas. Erros pequenos não interrompem a conversa.</p>
           <div class="exam-cycle-steps">
-            <div><b>1</b><span><strong>EXAME COM AJUDA</strong><small>Section A + B · conversa AI + ajuda PT</small></span></div>
-            <div><b>2</b><span><strong>EXEMPLO AI</strong><small>falado + escrito + pronúncia</small></span></div>
-            <div><b>3</b><span><strong>VOCABULÁRIO</strong><small>argumentação reutilizável</small></span></div>
-            <div><b>4</b><span><strong>EXAME FINAL</strong><small>AI examinador · sem ajuda</small></span></div>
+            <div><b>1</b><span><strong>COM AJUDA</strong><small>Section A e B · PT + frases úteis + interlocutor AI</small></span></div>
+            <div><b>2</b><span><strong>CORRIGIR AO VIVO</strong><small>1 erro importante → microexercício → repetir → voltar à conversa</small></span></div>
+            <div><b>3</b><span><strong>AJUDA MÍNIMA</strong><small>mesma tarefa · pistas progressivas apenas quando precisas</small></span></div>
+            <div><b>4</b><span><strong>SEM AJUDA</strong><small>nova tarefa · sem PT, sem sugestões, sem vocabulário</small></span></div>
           </div>
           <div class="cycle-controls">
             <label>Dificuldade
-              <select id="cycleDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
+              <select id="tefCoachDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
             </label>
-            <button id="startExamCycle" class="primary-btn">INICIAR CICLO COMPLETO</button>
-            <button id="resetExamCycle" class="danger-ghost hidden">Recomeçar ciclo</button>
+            <button id="startTefCoach" class="primary-btn">COMEÇAR TREINO TEF DE HOJE</button>
+            <button id="resetTefCoach" class="danger-ghost hidden">Recomeçar</button>
           </div>
-          <div id="examCycleStatus" class="cycle-status">Ainda não iniciado.</div>
+          <div id="tefCoachStatus" class="cycle-status">Ainda não iniciado.</div>
+          <div class="coach-optional"><button id="toggleSpeakingTools" class="secondary-btn compact">ABRIR TREINO LIVRE (OPCIONAL)</button></div>
         </div>
 
         <div id="speakingPathOverview" class="panel speaking-path-panel"></div>
@@ -371,7 +372,7 @@
   <script src="/app.js?v=20260927-1"></script>
   <script src="/speaking-flow-core.js?v=20260927-1"></script>
   <script src="/speaking-v2.js?v=20260927-1"></script>
-  <script src="/speaking-exam-cycle.js?v=20260929-1"></script>
+  <script src="/tef-ai-coach.js?v=20261001-1"></script>
   <script src="/resume-coach.js?v=20260927-1"></script>
   <script src="/ui-feedback.js?v=20260927-1"></script>
 </body>

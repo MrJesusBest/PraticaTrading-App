@@ -291,21 +291,22 @@ function renderListeningReview(item,workspace,correct){
       '<div class="turn-review">'+turns.map((t,i)=>'<div class="turn-review-row"><button class="mini-audio review-turn-audio" data-i="'+i+'">🔊</button><div><strong>'+(t.speaker==='woman'?'Mulher':t.speaker==='man'?'Homem':'Voz')+':</strong> <span lang="fr">'+escapeHtml(t.text||'')+'</span>'+(t.pt?'<small>'+escapeHtml(t.pt)+'</small>':'')+'</div></div>').join('')+'</div>'+
       '<div class="answer-study-list">'+item.choices.map((c,i)=>'<div class="answer-study '+(i===item.answerIndex?'answer-correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> <span lang="fr">'+escapeHtml(c)+'</span><small>'+escapeHtml((item.choicesPt||[])[i]||'')+'</small></div>').join('')+'</div>'+
     '</div></details>'+
-    '<button id="listenNextSimilar" class="primary-btn listen-next-btn">'+(correct?'PRÓXIMA PERGUNTA':'NOVA PERGUNTA PARECIDA')+'</button>'+
+    ((!item.diagnostic&&!item.mock)?'<button id="listenNextSimilar" class="primary-btn listen-next-btn">'+(correct?'PRÓXIMA PERGUNTA':'NOVA PERGUNTA PARECIDA')+'</button>':'')+
   '</div>';
   if($('#listenCriticalReplay',feedback))$('#listenCriticalReplay',feedback).onclick=()=>playStudyPhrase(critical.text,critical.speaker||'neutral',$('#listenCriticalReplay',feedback));
   $$('.review-turn-audio',feedback).forEach(b=>{const t=turns[Number(b.dataset.i)];b.onclick=()=>playStudyPhrase(t.text,t.speaker,b)});
-  $('#listenNextSimilar',feedback).onclick=e=>generateListening({button:e.currentTarget,difficulty:item.difficulty||$('#listeningDifficulty')?.value||'B1',supportMode:item.supportMode||'learn',examMode:item.supportMode==='exam',focus:item.skillTag||review.transferFocus||'general'});
+  if($('#listenNextSimilar',feedback))$('#listenNextSimilar',feedback).onclick=e=>generateListening({button:e.currentTarget,difficulty:item.difficulty||$('#listeningDifficulty')?.value||'B1',supportMode:item.supportMode||'learn',examMode:item.supportMode==='exam',focus:item.skillTag||review.transferFocus||'general'});
 }
 
 function renderListening(item,workspace=$('#listeningWorkspace'),onAnswered){
   ensureListeningV3Styles();
   workspace.classList.remove('empty-state');
-  const mode=listeningModeMeta(item.supportMode);
+  const effectiveMode=item.examMode?'exam':(item.supportMode||'learn');
+  const mode=listeningModeMeta(effectiveMode);
   const allowHelp=!item.diagnostic&&!item.mock&&!item.examMode;
   const showPt=item.supportMode==='learn';
   workspace.className='panel exercise-panel listening-shell-v3 '+mode.cls;
-  workspace.innerHTML='<div class="listen-mission"><div class="listen-mission-top"><div><div class="listen-kicker">TEF AI COACH · LISTENING</div><h2>'+escapeHtml(item.title||'Compréhension orale')+'</h2><small>'+escapeHtml(item.difficulty)+' · '+escapeHtml(listeningSkillLabel(item.skillTag))+'</small></div><div class="listen-mode-pill">'+mode.title+'</div></div><p>'+escapeHtml(mode.subtitle)+'</p>'+listeningStageProgress(item.supportMode)+'</div>'+
+  workspace.innerHTML='<div class="listen-mission"><div class="listen-mission-top"><div><div class="listen-kicker">TEF AI COACH · LISTENING</div><h2>'+escapeHtml(item.title||'Compréhension orale')+'</h2><small>'+escapeHtml(item.difficulty)+' · '+escapeHtml(listeningSkillLabel(item.skillTag))+'</small></div><div class="listen-mode-pill">'+mode.title+'</div></div><p>'+escapeHtml(mode.subtitle)+'</p>'+listeningStageProgress(effectiveMode)+'</div>'+
     '<div class="listen-focus-card">'+
       '<div class="listen-audio-main"><div><div class="listen-kicker">1 · OUVE</div><strong>'+(item.audioType==='dialogue'?'Diálogo':'Áudio')+'</strong><br><small>'+(item.examMode?'Toca uma vez.':'Podes repetir durante o treino.')+'</small></div><button class="audio-btn" id="listenPlay">▶</button></div>'+
       '<div class="listen-question-label">2 · O QUE TENS DE DESCOBRIR</div><div class="listen-question-main" lang="fr">'+escapeHtml(item.question)+'</div>'+

@@ -19,7 +19,7 @@
 
   function fresh(){
     return {
-      version:1,
+      version:2,
       id:null,
       active:false,
       difficulty:'B1',
@@ -36,7 +36,7 @@
   }
 
   function S(){
-    if(!state.tefAiCoach || state.tefAiCoach.version !== 1){
+    if(!state.tefAiCoach || state.tefAiCoach.version !== 2){
       state.tefAiCoach = fresh();
     }
     return state.tefAiCoach;

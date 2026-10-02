@@ -160,18 +160,16 @@
               <div class="small-label">CAMINHO PRINCIPAL · LISTENING AI COACH</div>
               <h3>O mesmo sistema simples do Speaking, adaptado ao áudio</h3>
             </div>
-            <span id="listeningDifficultyBadge" class="badge">B1</span>
+            <span class="badge">NÍVEL AUTO</span>
           </div>
-          <p>Escolhe o nível de ajuda e começa. O ecrã seguinte mostra apenas o áudio, o que tens de descobrir e as quatro opções.</p>
+          <p>Escolhe apenas o nível de ajuda e começa. <strong>A dificuldade é automática.</strong> O ecrã seguinte mostra apenas o áudio, o que tens de descobrir e as quatro opções.</p>
           <div class="exam-cycle-steps">
             <div><b>1</b><span><strong>COM AJUDA</strong><small>verde · tradução da pergunta + ajuda PT</small></span></div>
             <div><b>2</b><span><strong>AJUDA MÍNIMA</strong><small>âmbar · só pistas se bloqueares</small></span></div>
             <div><b>3</b><span><strong>SEM AJUDA</strong><small>vermelho · formato de simulação</small></span></div>
           </div>
           <div class="cycle-controls">
-            <label>Dificuldade
-              <select id="listeningDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
-            </label>
+            <div class="cycle-status"><strong>Nível adaptado automaticamente</strong><br><small>O Coach ajusta a dificuldade conforme os teus resultados, erros e uso de ajuda.</small></div>
             <label>Modo
               <select id="listeningSupportMode">
                 <option value="learn" selected>COM AJUDA</option>
@@ -223,16 +221,14 @@
             </div>
             <span class="badge">3 ETAPAS</span>
           </div>
-          <p>Um caminho único e visual: <strong>aprendes com ajuda</strong>, repetes com menos apoio e terminas em <strong>modo exame</strong>. As correções aparecem dentro da conversa, sem criar menus extra.</p>
+          <p>Um caminho único e visual: <strong>aprendes com ajuda</strong>, repetes com menos apoio e terminas em <strong>modo exame</strong>. A dificuldade é ajustada automaticamente pelo Coach.</p>
           <div class="exam-cycle-steps">
             <div><b>1</b><span><strong>COM AJUDA</strong><small>verde · guia completo turno a turno</small></span></div>
             <div><b>2</b><span><strong>AJUDA MÍNIMA</strong><small>âmbar · só pistas quando bloqueias</small></span></div>
             <div><b>3</b><span><strong>SEM AJUDA</strong><small>vermelho · simulação limpa</small></span></div>
           </div>
           <div class="cycle-controls">
-            <label>Dificuldade
-              <select id="tefCoachDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
-            </label>
+            <div class="cycle-status"><strong>Nível adaptado automaticamente</strong><br><small>O Coach sobe ou desce internamente sem te pedir configurações.</small></div>
             <button id="startTefCoach" class="primary-btn">COMEÇAR TREINO TEF DE HOJE</button>
             <button id="resetTefCoach" class="danger-ghost hidden">Recomeçar</button>
           </div>
@@ -261,9 +257,7 @@
               <button class="seg" data-section="B">Section B · mais tarde</button>
             </div>
             <div id="speakingExamControls" class="controls-row hidden">
-              <label>Dificuldade da simulação
-                <select id="speakingDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
-              </label>
+              <div class="inline-help"><strong>Nível automático:</strong> a simulação é ajustada ao teu progresso sem escolher A2/B1/B2.</div>
             </div>
             <div class="hero-actions">
               <button id="startSpeakingTraining" class="primary-btn">Começar micro-treino</button>
@@ -376,10 +370,10 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="/app.js?v=20261001-2"></script>
+  <script src="/app.js?v=20261001-3"></script>
   <script src="/speaking-flow-core.js?v=20260927-1"></script>
-  <script src="/speaking-v2.js?v=20260927-1"></script>
-  <script src="/tef-ai-coach.js?v=20261001-3"></script>
+  <script src="/speaking-v2.js?v=20261001-2"></script>
+  <script src="/tef-ai-coach.js?v=20261001-4"></script>
   <script src="/resume-coach.js?v=20260927-1"></script>
   <script src="/ui-feedback.js?v=20260927-1"></script>
 </body>

@@ -355,7 +355,7 @@ function renderListening(item,workspace=$('#listeningWorkspace'),onAnswered){
   const allowHelp=!item.diagnostic&&!item.mock&&!item.examMode;
   const showPt=item.supportMode==='learn';
   workspace.className='panel exercise-panel listening-shell-v3 '+mode.cls;
-  workspace.innerHTML='<div class="listen-mission"><div class="listen-mission-top"><div><div class="listen-kicker">TEF AI COACH · LISTENING</div><h2>'+escapeHtml(item.title||'Compréhension orale')+'</h2><small>'+escapeHtml(item.difficulty)+' · '+escapeHtml(listeningSkillLabel(item.skillTag))+'</small></div><div class="listen-mode-pill">'+mode.title+'</div></div><p>'+escapeHtml(mode.subtitle)+'</p>'+listeningStageProgress(effectiveMode)+'</div>'+
+  workspace.innerHTML='<div class="listen-mission"><div class="listen-mission-top"><div><div class="listen-kicker">TEF AI COACH · LISTENING</div><h2>'+escapeHtml(item.title||'Compréhension orale')+'</h2><small>NÍVEL ADAPTADO AUTOMATICAMENTE · '+escapeHtml(listeningSkillLabel(item.skillTag))+'</small></div><div class="listen-mode-pill">'+mode.title+'</div></div><p>'+escapeHtml(mode.subtitle)+'</p>'+listeningStageProgress(effectiveMode)+'</div>'+
     '<div class="listen-focus-card">'+
       '<div class="listen-audio-main"><div><div class="listen-kicker">1 · OUVE</div><strong>'+(item.audioType==='dialogue'?'Diálogo':'Áudio')+'</strong><br><small>'+(item.examMode?'Toca uma vez.':'Podes repetir durante o treino.')+'</small></div><button class="audio-btn" id="listenPlay">▶</button></div>'+
       '<div class="listen-question-label">2 · O QUE TENS DE DESCOBRIR</div><div class="listen-question-main" lang="fr">'+escapeHtml(item.question)+'</div>'+
@@ -583,7 +583,7 @@ function renderPlan(){
 function renderHistory(){
   const w=$('#historyList'); if(!w)return;
   if(!state.history.length){w.innerHTML='<p>Sem histórico ainda.</p>';return;}
-  w.innerHTML=state.history.slice(0,30).map(h=>`<div class="history-row"><strong>${escapeHtml(h.kind)}</strong><div>${escapeHtml(h.title)}<br><small>${new Date(h.at).toLocaleString()}</small></div><span>${escapeHtml(h.result)}</span></div>`).join('');
+  w.innerHTML=state.history.slice(0,30).map(h=>{const cleanTitle=String(h.title||'').replace(/^(A2|B1|B2)\s*·\s*/,'');return `<div class="history-row"><strong>${escapeHtml(h.kind)}</strong><div>${escapeHtml(cleanTitle)}<br><small>${new Date(h.at).toLocaleString()}</small></div><span>${escapeHtml(h.result)}</span></div>`;}).join('');
 }
 $('#clearProgress').addEventListener('click',()=>{
   if(confirm('Apagar todo o progresso local desta plataforma?')){state=initialState();saveState();renderHistory();renderPlan();toast('Progresso local apagado.');}

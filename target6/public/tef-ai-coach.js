@@ -99,31 +99,65 @@
     if(document.getElementById('tefAiCoachStyles')) return;
     const st=document.createElement('style');
     st.id='tefAiCoachStyles';
-    st.textContent =
-      '.tef-coach-mode{padding:14px 16px;border-radius:14px;margin:12px 0 16px;border:1px solid rgba(255,255,255,.12)}' +
-      '.tef-coach-mode strong{display:block;font-size:1rem;margin-bottom:3px}.tef-coach-mode span{font-size:.86rem;opacity:.86}' +
-      '.coach-full{background:rgba(23,185,120,.12);border-color:rgba(23,185,120,.45)}' +
-      '.coach-minimal{background:rgba(222,170,36,.11);border-color:rgba(222,170,36,.42)}' +
-      '.coach-final{background:rgba(225,75,75,.10);border-color:rgba(225,75,75,.42)}' +
-      '.tef-coach-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}' +
-      '.tef-coach-progress div{padding:9px;border-radius:10px;background:rgba(255,255,255,.04);font-size:.76rem;text-align:center}' +
-      '.tef-coach-progress .active{outline:1px solid rgba(67,224,167,.7);background:rgba(67,224,167,.08)}' +
-      '.coach-intervention{margin:14px 0;padding:16px;border-radius:14px;background:rgba(222,170,36,.09);border:1px solid rgba(222,170,36,.35)}' +
-      '.coach-intervention h4{margin:0 0 8px}.coach-hints{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}' +
-      '.coach-hint-box{padding:10px;border-radius:10px;background:rgba(255,255,255,.05);margin:8px 0}' +
-      '.coach-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}' +
-      '.coach-metrics div{padding:12px;border-radius:12px;background:rgba(255,255,255,.05)}' +
-      '.coach-metrics span{display:block;font-size:.72rem;opacity:.7}.coach-metrics strong{font-size:1.05rem}' +
-      '.coach-optional{margin-top:16px}.coach-optional button{width:100%}' +
-      '.coach-hidden-tools{display:none!important}' +
-      '.coach-time-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04)}' +
-      '.coach-guided-card{margin:14px 0;padding:16px;border-radius:16px;background:rgba(23,185,120,.08);border:1px solid rgba(23,185,120,.34)}' +
-      '.coach-guided-card .guided-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.coach-guided-card .guided-head strong{font-size:1rem}' +
-      '.coach-guided-block{padding:11px 12px;margin:8px 0;border-radius:11px;background:rgba(255,255,255,.05)}.coach-guided-block small{display:block;opacity:.72;margin-bottom:4px}.coach-guided-block strong{display:block;line-height:1.45}' +
-      '.coach-guided-map{margin-top:10px}.coach-guided-map summary{cursor:pointer;font-weight:700}.coach-guided-map-row{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}.coach-guided-map-row.active{font-weight:700}' +
-      '@media(max-width:760px){.tef-coach-progress,.coach-metrics{grid-template-columns:1fr}.coach-hints{grid-template-columns:1fr}}';
+    st.textContent=`
+      #tefAiCoachPanel{border:0!important;background:linear-gradient(145deg,rgba(16,20,29,.98),rgba(21,27,38,.98))!important;box-shadow:0 18px 55px rgba(0,0,0,.22)}
+      #tefAiCoachPanel .exam-cycle-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+      #tefAiCoachPanel .exam-cycle-steps>div{border:0!important;border-radius:14px!important;padding:14px!important;background:rgba(255,255,255,.045)!important}
+      #tefAiCoachPanel .exam-cycle-steps>div:nth-child(1){box-shadow:inset 0 3px 0 #19b97d}
+      #tefAiCoachPanel .exam-cycle-steps>div:nth-child(2){box-shadow:inset 0 3px 0 #dda62a}
+      #tefAiCoachPanel .exam-cycle-steps>div:nth-child(3){box-shadow:inset 0 3px 0 #df6266}
+      .coach-hidden-tools{display:none!important}
+      .coach-shell-v3{--coach-accent:#19b97d;--coach-soft:rgba(25,185,125,.11);--coach-line:rgba(25,185,125,.32)}
+      .coach-shell-v3.mode-minimal{--coach-accent:#dda62a;--coach-soft:rgba(221,166,42,.105);--coach-line:rgba(221,166,42,.34)}
+      .coach-shell-v3.mode-final{--coach-accent:#df6266;--coach-soft:rgba(223,98,102,.09);--coach-line:rgba(223,98,102,.34)}
+      .coach-mission{padding:18px;border-radius:18px;background:linear-gradient(135deg,var(--coach-soft),rgba(255,255,255,.025));border:1px solid var(--coach-line);margin-bottom:14px}
+      .coach-mission-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+      .coach-kicker{font-size:.68rem;font-weight:900;letter-spacing:.12em;opacity:.62;margin-bottom:4px}
+      .coach-mission h2{font-size:1.32rem;margin:0}.coach-mission-sub{font-size:.78rem;opacity:.72;margin-top:5px;max-width:650px}
+      .coach-mode-pill{white-space:nowrap;padding:8px 11px;border-radius:999px;background:var(--coach-accent);color:#07100d;font-size:.73rem;font-weight:900;letter-spacing:.04em}
+      .mode-final .coach-mode-pill{color:white}
+      .coach-meta-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;font-size:.82rem}
+      .coach-stage-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+      .coach-stage-progress>div{height:7px;border-radius:999px;background:rgba(255,255,255,.075)}.coach-stage-progress>div.active,.coach-stage-progress>div.done{background:var(--coach-accent)}
+      .coach-task-toggle{margin:0 0 12px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);padding:11px 13px}
+      .coach-task-toggle summary{cursor:pointer;font-weight:800}.coach-task-body{padding-top:10px}
+      .coach-support-compact{margin-bottom:12px;padding:11px 13px;border-radius:12px;background:var(--coach-soft);border:1px solid var(--coach-line)}
+      .coach-support-compact details summary{cursor:pointer;font-weight:800}
+      .coach-focus-card{padding:20px;border-radius:20px;background:rgba(255,255,255,.052);border:1px solid var(--coach-line);box-shadow:0 14px 36px rgba(0,0,0,.14);margin:12px 0}
+      .coach-focus-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.coach-focus-step{font-size:.71rem;font-weight:900;letter-spacing:.09em;color:var(--coach-accent)}
+      .coach-focus-card h3{font-size:1.12rem;line-height:1.42;margin:5px 0 14px}
+      .coach-say-box{padding:16px;border-radius:15px;background:var(--coach-soft);border:1px solid var(--coach-line)}
+      .coach-say-box .say-fr{font-size:1.16rem;line-height:1.55;font-weight:800}.coach-say-box .say-pt{font-size:.86rem;opacity:.79;margin-top:7px}
+      .coach-audio-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+      .coach-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+      .coach-mini-card{padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+      .coach-mini-card span{display:block;font-size:.66rem;font-weight:900;letter-spacing:.09em;opacity:.58;margin-bottom:5px}.coach-mini-card strong{display:block;line-height:1.4}
+      .coach-rescue{margin-top:10px}.coach-rescue summary{cursor:pointer;font-weight:800;color:var(--coach-accent)}.coach-rescue>div{padding:10px 0 2px}
+      .coach-minimal-focus{padding:20px;border-radius:20px;background:var(--coach-soft);border:1px solid var(--coach-line);margin:12px 0}.coach-minimal-focus h3{margin:4px 0 10px}
+      .coach-final-task{padding:22px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid var(--coach-line);margin:12px 0}.coach-final-task .task-prompt{font-size:1.03rem;line-height:1.55}
+      .coach-latest{margin:12px 0;padding:15px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075)}
+      .coach-latest.empty{opacity:.7}.coach-latest-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px}.coach-latest-head span{font-size:.67rem;font-weight:900;letter-spacing:.09em;opacity:.58}
+      .coach-latest-fr{font-size:1rem;line-height:1.5;font-weight:700}.coach-latest-pt{font-size:.84rem;opacity:.75;margin-top:7px}
+      .coach-response-options{margin-top:10px}.coach-response-options summary{cursor:pointer;font-weight:800;color:var(--coach-accent)}.coach-response-option{padding:10px;margin-top:7px;border-radius:10px;background:var(--coach-soft)}
+      .coach-history{margin:10px 0}.coach-history summary{cursor:pointer;font-size:.8rem;opacity:.72}.coach-history .conversation-log{margin-top:9px;max-height:280px}
+      .coach-guided-map-row{display:grid;grid-template-columns:34px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}.coach-guided-map-row.active{font-weight:800;color:var(--coach-accent)}
+      .coach-action-dock{position:sticky;bottom:10px;z-index:30;display:flex;gap:8px;margin-top:14px;padding:10px;border-radius:16px;background:rgba(12,16,23,.94);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+      .coach-action-dock button{min-height:48px;flex:1}.coach-action-dock .coach-talk-btn{flex:1.35;background:var(--coach-accent)!important;border-color:var(--coach-accent)!important;color:#06110d!important;font-weight:900}.mode-final .coach-talk-btn{color:white!important}
+      .coach-end-btn{opacity:.74}.coach-status-line{font-size:.75rem;opacity:.65;text-align:center;margin:8px 0 0}
+      .coach-intervention{margin:14px 0;padding:18px;border-radius:18px;background:rgba(221,166,42,.095);border:1px solid rgba(221,166,42,.35)}
+      .coach-intervention h4{margin:3px 0 10px}.coach-hints{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.coach-hint-box{padding:11px;border-radius:11px;background:rgba(255,255,255,.05);margin:8px 0}
+      .coach-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.coach-metrics div{padding:12px;border-radius:12px;background:rgba(255,255,255,.05)}.coach-metrics span{display:block;font-size:.72rem;opacity:.7}.coach-metrics strong{font-size:1.05rem}
+      .coach-optional{margin-top:16px}.coach-optional button{width:100%}
+      @media(max-width:760px){
+        #tefAiCoachPanel .exam-cycle-steps{grid-template-columns:1fr}
+        .coach-mission-top,.coach-meta-row{align-items:flex-start;flex-direction:column}
+        .coach-mini-grid{grid-template-columns:1fr}.coach-action-dock{display:grid;grid-template-columns:1fr 1fr}.coach-action-dock .coach-end-btn{grid-column:1/-1}
+        .coach-metrics{grid-template-columns:1fr 1fr}.coach-mode-pill{align-self:flex-start}
+      }
+    `;
     document.head.appendChild(st);
   }
+
 
   function renderPanel(){
     const c=S();
@@ -175,10 +209,12 @@
   }
 
   function progressHtml(stage){
-    const group = stage.mode === 'full' ? 0 : stage.mode === 'minimal' ? 1 : 2;
-    const names=['1 · COM AJUDA','2 · AJUDA MÍNIMA','3 · SEM AJUDA'];
-    return '<div class="tef-coach-progress">'+names.map((x,i)=>'<div class="'+(i===group?'active':'')+'">'+x+'</div>').join('')+'</div>';
+    const group=stage.mode==='full'?0:stage.mode==='minimal'?1:2;
+    return '<div class="coach-stage-progress" aria-label="Progresso do modo">'+
+      [0,1,2].map(i=>'<div class="'+(i<group?'done':i===group?'active':'')+'"></div>').join('')+
+    '</div>';
   }
+
 
   function targetSeconds(section){
     return section==='A'?300:600;
@@ -207,34 +243,46 @@
   }
 
   function renderGuidedStep(stage,task,rt){
-    if(stage.mode!=='full')return;
     const holder=$('#coachGuidedStep');
-    if(!holder)return;
+    if(!holder||stage.mode==='final')return;
     const plan=guidedPlan(task);
     if(!plan.length){
-      holder.innerHTML='<div class="feedback">Este ciclo antigo não tem ainda o mapa completo. Inicia um novo ciclo para receber o guia passo a passo.</div>';
+      holder.innerHTML='<div class="coach-latest empty">Inicia um novo ciclo para receberes o guia completo desta tarefa.</div>';
       return;
     }
-    const idx=guideIndex(rt,plan),step=plan[idx];
-    const done=Boolean(rt.guideCompleted);
-    holder.innerHTML='<div class="coach-guided-card">'+
-      '<div class="guided-head"><div><div class="small-label">GUIA DA CONVERSA · '+(stage.section==='A'?'5 MIN':'10 MIN')+'</div><strong>'+(done?'MAPA COMPLETO — fecha naturalmente a conversa':'PASSO '+(idx+1)+'/'+plan.length+' · '+escapeHtml(step.phasePt||''))+'</strong></div><span class="badge">'+Math.round(((done?plan.length:idx)/plan.length)*100)+'%</span></div>'+
+    const idx=guideIndex(rt,plan),step=plan[idx],done=Boolean(rt.guideCompleted);
+    if(stage.mode==='minimal'){
+      holder.innerHTML='<div class="coach-minimal-focus">'+
+        '<div class="coach-focus-step">PASSO '+(idx+1)+'/'+plan.length+' · '+escapeHtml(step.phasePt||'CONTINUAR')+'</div>'+
+        '<h3>'+escapeHtml(step.goalPt||'Continua a conversa com autonomia.')+'</h3>'+
+        '<p>Faz primeiro sozinho. Só abre uma pista se bloqueares.</p><div id="coachDemandHint"></div>'+
+      '</div>';
+      return;
+    }
+    holder.innerHTML='<div class="coach-focus-card">'+
+      '<div class="coach-focus-top"><div><div class="coach-focus-step">PASSO '+(idx+1)+'/'+plan.length+' · '+escapeHtml(step.phasePt||'AGORA')+'</div>'+
+      '<h3>'+(done?'Fecha a conversa naturalmente.':escapeHtml(step.goalPt||'Continua a conversa.'))+'</h3></div><span class="badge">'+Math.round(((done?plan.length:idx)/plan.length)*100)+'%</span></div>'+
       (done
-        ? '<div class="coach-guided-block"><small>AGORA</small><strong>Já percorreste todos os passos. Faz uma reação final natural e termina a secção quando estiveres pronto.</strong></div>'
-        : '<div class="coach-guided-block"><small>1 · O QUE FAZER AGORA</small><strong>'+escapeHtml(step.goalPt||'Continua a conversa.')+'</strong></div>'+
-          '<div class="coach-guided-block"><small>2 · PODES DIZER ISTO</small><strong lang="fr">'+escapeHtml(step.sayFr||'')+'</strong>'+
-            (step.pronunciationPt?'<span class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(step.pronunciationPt)+'</span>':'')+
-            (step.sayPt?'<p>'+escapeHtml(step.sayPt)+'</p>':'')+
-            '<button id="coachGuideSayAudio" class="secondary-btn compact">▶ OUVIR ESTE TURNO</button></div>'+
-          '<div class="coach-guided-block"><small>3 · QUANDO ELE RESPONDER, OUVE ISTO</small><strong>'+escapeHtml(step.listenForPt||'A informação principal da resposta.')+'</strong></div>'+
-          '<div class="coach-guided-block"><small>4 · REAGE E LIGA À PRÓXIMA IDEIA</small><strong lang="fr">'+escapeHtml(step.bridgeFr||'D’accord, merci.')+'</strong>'+(step.bridgePt?'<p>'+escapeHtml(step.bridgePt)+'</p>':'')+'<button id="coachGuideBridgeAudio" class="secondary-btn compact">▶ OUVIR LIGAÇÃO</button></div>'+
-          '<div class="coach-guided-block"><small>5 · SE BLOQUEARES</small><strong lang="fr">'+escapeHtml(step.rescueFr||step.sayFr||'')+'</strong></div>')+
-      '<details class="coach-guided-map"><summary>Ver mapa completo da conversa</summary>'+
+        ? '<div class="coach-say-box"><div class="say-fr">Já percorreste o mapa completo. Faz uma reação final natural e termina a secção quando estiveres pronto.</div></div>'
+        : '<div class="coach-say-box"><div class="coach-kicker">AGORA PODES DIZER</div><div class="say-fr" lang="fr">'+escapeHtml(step.sayFr||'')+'</div>'+
+          (step.pronunciationPt?'<div class="pronunciation-cue"><b>Lê assim:</b> '+escapeHtml(step.pronunciationPt)+'</div>':'')+
+          (step.sayPt?'<div class="say-pt">'+escapeHtml(step.sayPt)+'</div>':'')+
+          '<div class="coach-audio-row"><button id="coachGuideSayAudio" class="secondary-btn compact">▶ OUVIR</button></div></div>'+
+          '<div class="coach-mini-grid">'+
+            '<div class="coach-mini-card"><span>OUVE NA RESPOSTA</span><strong>'+escapeHtml(step.listenForPt||'A informação principal.')+'</strong></div>'+
+            '<div class="coach-mini-card"><span>CONTINUA ASSIM</span><strong lang="fr">'+escapeHtml(step.bridgeFr||'D’accord, merci.')+'</strong>'+
+              (step.bridgePt?'<small>'+escapeHtml(step.bridgePt)+'</small>':'')+
+              '<div class="coach-audio-row"><button id="coachGuideBridgeAudio" class="secondary-btn compact">▶ OUVIR</button></div></div>'+
+          '</div>'+
+          '<details class="coach-rescue"><summary>Se bloqueares, abre a versão simples</summary><div><strong lang="fr">'+escapeHtml(step.rescueFr||step.sayFr||'')+'</strong></div></details>'+
+          '<div id="coachDemandHint"></div>')+
+      '<details class="coach-history"><summary>Ver mapa completo da conversa</summary><div>'+
         plan.map((x,i)=>'<div class="coach-guided-map-row '+(i===idx&&!done?'active':'')+'"><span>'+(i+1)+'</span><span>'+escapeHtml(x.phasePt||'Passo')+' — '+escapeHtml(x.goalPt||'')+'</span></div>').join('')+
-      '</details></div>';
+      '</div></details></div>';
     if($('#coachGuideSayAudio'))$('#coachGuideSayAudio').onclick=()=>playStudyPhrase(step.sayFr,'neutral',$('#coachGuideSayAudio'));
     if($('#coachGuideBridgeAudio'))$('#coachGuideBridgeAudio').onclick=()=>playStudyPhrase(step.bridgeFr,'neutral',$('#coachGuideBridgeAudio'));
   }
+
 
   function startStageClock(stage,rt){
     clearInterval(stageClockTimer);
@@ -249,94 +297,90 @@
     stageClockTimer=setInterval(tick,1000);
   }
 
-  function renderSupport(stage, task, rt){
-    if(stage.mode === 'final') return '';
-    if(stage.mode === 'full'){
-      return '<div class="assisted-help-card"><h4>EXAME GUIADO — EU DIGO-TE O QUE FAZER EM CADA PASSO</h4>'+
-        '<div class="assisted-translation"><strong>Consigne em português:</strong><br>'+escapeHtml(task.promptPt||'')+'</div>'+
-        (task.roadmapPt?'<p><strong>Estrutura completa:</strong> '+escapeHtml(task.roadmapPt)+'</p>':'')+
-        '<div id="coachGuidedStep"></div><div id="coachDemandHint"></div></div>';
+  function renderSupport(stage,task,rt){
+    if(stage.mode==='final')return '';
+    if(stage.mode==='full'){
+      return '<div class="coach-support-compact"><details><summary>Ver consigne em português e estratégia geral</summary><div class="coach-task-body">'+
+        '<p>'+escapeHtml(task.promptPt||'')+'</p>'+(task.roadmapPt?'<p><strong>Estratégia:</strong> '+escapeHtml(task.roadmapPt)+'</p>':'')+
+      '</div></details></div>';
     }
-    return '<div class="assisted-help-card"><h4>AJUDA MÍNIMA</h4><p>Faz primeiro sozinho. Se bloqueares, carrega <strong>PRECISO DE UMA PISTA</strong>. A ajuda abre por níveis, não entrega logo a resposta.</p><div id="coachDemandHint"></div></div>';
+    return '<div class="coach-support-compact"><strong>AJUDA MÍNIMA</strong><p>Faz o passo sozinho. Se bloqueares, usa <strong>PISTA</strong> no rodapé.</p></div>';
   }
 
-  function renderConversation(stage, rt){
-    const box=$('#coachConversation');
-    if(!box) return;
-    if(!rt.conversation.length){
-      box.innerHTML='<div class="conversation-empty">'+(stage.mode==='final'?'Começa quando estiveres pronto. Durante esta fase não aparece qualquer ajuda.':'Fala em francês. O tutor responde como interlocutor real e só corrige erros importantes.')+'</div>';
-      return;
+
+  function renderConversation(stage,rt){
+    const latest=$('#coachLatestReply'),history=$('#coachConversationHistory');
+    if(!latest||!history)return;
+    const messages=Array.isArray(rt.conversation)?rt.conversation:[];
+    const examiners=messages.filter(x=>x.role==='examiner');
+    const last=examiners[examiners.length-1];
+    if(!last){
+      latest.className='coach-latest empty';
+      latest.innerHTML='<div class="coach-latest-head"><span>INTERLOCUTOR</span></div><div>'+(stage.mode==='final'?'Começa quando estiveres pronto.':'A resposta da AI aparece aqui. Mantém o foco no cartão atual.')+'</div>';
+    }else if(stage.mode==='final'){
+      latest.className='coach-latest';
+      latest.innerHTML='<div class="coach-latest-head"><span>INTERLOCUTOR AI</span><small>SEM AJUDA</small></div><div class="coach-latest-fr">Resposta reproduzida por áudio.</div>';
+    }else{
+      const options=stage.mode==='full'&&Array.isArray(last.responseOptions)?last.responseOptions:[];
+      latest.className='coach-latest';
+      latest.innerHTML='<div class="coach-latest-head"><span>ÚLTIMA RESPOSTA DO INTERLOCUTOR</span><small>'+escapeHtml(stage.label)+'</small></div>'+
+        '<div class="coach-latest-fr" lang="fr">'+escapeHtml(last.text||'')+'</div>'+
+        (stage.mode==='full'&&last.replyPt?'<div class="coach-latest-pt">'+escapeHtml(last.replyPt)+'</div>':'')+
+        (stage.mode==='full'&&last.helpPt?'<div class="coach-latest-pt"><strong>O que fazer:</strong> '+escapeHtml(last.helpPt)+'</div>':'')+
+        (options.length?'<details class="coach-response-options"><summary>Quero ver 2 respostas possíveis</summary>'+
+          options.map((o,j)=>'<div class="coach-response-option"><button class="mini-audio coach-option-audio" data-oi="'+j+'">🔊</button><strong lang="fr">'+escapeHtml(o.fr||'')+'</strong><small>'+escapeHtml(o.pt||'')+'</small></div>').join('')+
+        '</details>':'');
+      $$('.coach-option-audio',latest).forEach(btn=>{const item=options[Number(btn.dataset.oi)];if(item)btn.onclick=()=>playStudyPhrase(item.fr,'neutral',btn);});
     }
-    box.innerHTML=rt.conversation.map((x,i)=>{
-      if(stage.mode==='final'){
-        return x.role==='candidate'
-          ? '<div class="bubble candidate"><span>Tu</span>Resposta enviada</div>'
-          : '<div class="bubble examiner"><span>Examinador AI</span>Resposta áudio reproduzida</div>';
-      }
-      if(x.role==='candidate') return '<div class="bubble candidate"><span>Tu</span>'+escapeHtml(x.text||'')+'</div>';
-      const options=stage.mode==='full' && Array.isArray(x.responseOptions) ? x.responseOptions : [];
-      return '<div class="bubble examiner"><span>Interlocutor AI</span>'+escapeHtml(x.text||'')+
-        (stage.mode==='full' && x.replyPt ? '<div class="assisted-help-card"><strong>Em português:</strong><p>'+escapeHtml(x.replyPt)+'</p>'+(x.helpPt?'<p><strong>Próximo passo:</strong> '+escapeHtml(x.helpPt)+'</p>':'')+
-          (options.length?'<div class="support-phrase-list">'+options.map((o,j)=>'<div class="support-phrase"><button class="mini-audio coach-option-audio" data-ci="'+i+'" data-oi="'+j+'">🔊</button><div><span class="support-purpose">'+escapeHtml(o.purposePt||'Opção')+'</span><strong lang="fr">'+escapeHtml(o.fr||'')+'</strong><small>'+escapeHtml(o.pt||'')+'</small></div></div>').join('')+'</div>':'')+
-          '</div>':'')+
-        '</div>';
-    }).join('');
-    $$('.coach-option-audio',box).forEach(btn=>{
-      const item=rt.conversation[Number(btn.dataset.ci)]?.responseOptions?.[Number(btn.dataset.oi)];
-      if(item) btn.onclick=()=>playStudyPhrase(item.fr,'neutral',btn);
-    });
-    box.scrollTop=box.scrollHeight;
+    history.innerHTML=messages.length?messages.map(x=>{
+      if(stage.mode==='final')return x.role==='candidate'
+        ? '<div class="bubble candidate"><span>Tu</span>Resposta enviada</div>'
+        : '<div class="bubble examiner"><span>Examinador AI</span>Resposta áudio reproduzida</div>';
+      return x.role==='candidate'
+        ? '<div class="bubble candidate"><span>Tu</span>'+escapeHtml(x.text||'')+'</div>'
+        : '<div class="bubble examiner"><span>Interlocutor AI</span>'+escapeHtml(x.text||'')+'</div>';
+    }).join(''):'<div class="conversation-empty">Ainda não há histórico.</div>';
   }
 
-  function renderStage(stage, reset=false){
+
+  function renderStage(stage,reset=false){
     stopMedia();
     submitting=false;
-    const c=S();
-    const task=taskFor(stage);
-    if(!task){ toast('Não encontrei a tarefa desta etapa.','error'); return; }
-    c.stageIndex=stages.findIndex(x=>x.id===stage.id);
-    c.active=true;
-    const rt=runtime(stage, reset);
-    persist();
-    const info=modeInfo(stage.mode);
-    const w=workspace();
-    w.className='panel exercise-panel';
+    const c=S(),task=taskFor(stage);
+    if(!task){toast('Não encontrei a tarefa desta etapa.','error');return;}
+    c.stageIndex=stages.findIndex(x=>x.id===stage.id);c.active=true;
+    const rt=runtime(stage,reset);persist();
+    const info=modeInfo(stage.mode),w=workspace(),plan=guidedPlan(task),idx=plan.length?guideIndex(rt,plan):0;
+    const shellMode=stage.mode==='full'?'mode-full':stage.mode==='minimal'?'mode-minimal':'mode-final';
+    w.className='panel exercise-panel coach-shell-v3 '+shellMode;
     w.innerHTML=
-      '<div class="cycle-stage-head"><div><div class="cycle-stage-kicker">TEF AI COACH</div><h3>SPEAKING · SECTION '+stage.section+'</h3></div><span class="badge">'+escapeHtml(c.difficulty)+'</span></div>' +
-      progressHtml(stage) +
-      '<div class="tef-coach-mode '+info.cls+'"><strong>'+info.title+'</strong><span>'+info.subtitle+'</span></div>' +
-      '<div class="coach-time-row"><span>RITMO DA CONVERSA</span><strong id="coachStageClock">00:00 / '+formatTime(targetSeconds(stage.section))+'</strong></div>' +
-      '<div class="task-card"><h4>Consigne</h4><div class="task-prompt">'+escapeHtml(task.promptFr||'')+'</div>' +
-        (stage.mode==='full' && task.prepTipPt?'<p><small><strong>Guia:</strong> '+escapeHtml(task.prepTipPt)+'</small></p>':'')+
-      '</div>' +
-      renderSupport(stage,task,rt) +
-      '<div id="coachConversation" class="conversation-log"></div>' +
-      '<div id="coachIntervention"></div>' +
-      '<div class="recording-controls">' +
-        '<button id="coachTurnStart" class="record-btn">● FALAR / RESPONDER</button>' +
-        '<button id="coachTurnStop" class="stop-btn" disabled>■ TERMINEI</button>' +
-        (stage.mode!=='final'?'<button id="coachNeedHelp" class="secondary-btn">PRECISO DE UMA PISTA</button>':'') +
-        '<button id="coachFinishStage" class="secondary-btn">TERMINAR SECTION '+stage.section+'</button>' +
-      '</div>' +
-      '<div id="coachStatus" class="small-label">'+
-        (stage.mode==='final'?'Sem ajuda. Fala normalmente e carrega TERMINEI quando acabares a resposta.':'Fala sem pressa. A correção só aparece quando realmente ajudar.')+
-      '</div>';
+      '<div class="coach-mission"><div class="coach-mission-top"><div><div class="coach-kicker">TEF AI COACH</div><h2>SPEAKING · SECTION '+stage.section+'</h2><div class="coach-mission-sub">'+escapeHtml(info.subtitle)+'</div></div>'+
+      '<div class="coach-mode-pill">'+escapeHtml(info.title)+'</div></div>'+
+      '<div class="coach-meta-row"><span>'+(stage.mode==='final'?'SIMULAÇÃO REAL':plan.length?'Passo '+Math.min(idx+1,plan.length)+' de '+plan.length:'Treino guiado')+'</span><strong id="coachStageClock">00:00 / '+formatTime(targetSeconds(stage.section))+'</strong></div>'+
+      progressHtml(stage)+'</div>'+
+      (stage.mode==='final'?'':'<details class="coach-task-toggle"><summary>Consigne da tarefa</summary><div class="coach-task-body"><div class="task-prompt">'+escapeHtml(task.promptFr||'')+'</div>'+
+        (stage.mode==='full'&&task.prepTipPt?'<p><small><strong>Dica:</strong> '+escapeHtml(task.prepTipPt)+'</small></p>':'')+'</div></details>')+
+      renderSupport(stage,task,rt)+
+      (stage.mode==='final'
+        ? '<div class="coach-final-task"><div class="coach-kicker">FAZ SOZINHO</div><div class="task-prompt">'+escapeHtml(task.promptFr||'')+'</div></div>'
+        : '<div id="coachGuidedStep"></div>')+
+      '<div id="coachLatestReply" class="coach-latest empty"></div>'+
+      '<details class="coach-history"><summary>Ver conversa completa</summary><div id="coachConversationHistory" class="conversation-log"></div></details>'+
+      '<div id="coachIntervention"></div>'+
+      '<div class="coach-action-dock"><button id="coachTurnStart" class="record-btn coach-talk-btn">● FALAR</button><button id="coachTurnStop" class="stop-btn" disabled>■ TERMINEI</button>'+
+      (stage.mode!=='final'?'<button id="coachNeedHelp" class="secondary-btn">PISTA</button>':'')+
+      '<button id="coachFinishStage" class="secondary-btn coach-end-btn">TERMINAR</button></div>'+
+      '<div id="coachStatus" class="coach-status-line">'+(stage.mode==='full'?'Segue apenas o cartão “Agora”.':stage.mode==='minimal'?'Tenta sozinho; usa PISTA apenas se travares.':'Sem ajuda. Fala como no exame.')+'</div>';
 
-    renderConversation(stage,rt);
-    renderGuidedStep(stage,task,rt);
-    startStageClock(stage,rt);
-    const support=Array.isArray(task.support)?task.support:[];
-    $$('.coach-support-audio',w).forEach(btn=>{
-      const x=support[Number(btn.dataset.i)];
-      if(x) btn.onclick=()=>playStudyPhrase(x.fr,'neutral',btn);
-    });
+    renderConversation(stage,rt);renderGuidedStep(stage,task,rt);startStageClock(stage,rt);
     $('#coachTurnStart').onclick=()=>startRecording({type:'turn',stageId:stage.id});
     $('#coachTurnStop').onclick=finishRecording;
     $('#coachFinishStage').onclick=()=>finishStage(stage);
-    if($('#coachNeedHelp')) $('#coachNeedHelp').onclick=()=>showDemandHelp(stage,task,rt);
-    if(rt.pending) renderIntervention(stage,rt);
+    if($('#coachNeedHelp'))$('#coachNeedHelp').onclick=()=>showDemandHelp(stage,task,rt);
+    if(rt.pending)renderIntervention(stage,rt);
     setTimeout(()=>w.scrollIntoView({behavior:'smooth',block:'start'}),60);
   }
+
 
   function showDemandHelp(stage,task,rt){
     const box=$('#coachDemandHint');
@@ -613,14 +657,12 @@
     const status=$('#coachStatus');
     if(status) status.textContent='Interlocutor a responder…';
     await playStudyPhrase(turn.replyFr,'man');
-    if(stage.mode==='full'){
+    if(stage.mode==='full'||stage.mode==='minimal'){
       const plan=guidedPlan(taskFor(stage));
       if(plan.length){
-        if((rt.guideStep||0) >= plan.length-1) rt.guideCompleted=true;
+        if((rt.guideStep||0)>=plan.length-1)rt.guideCompleted=true;
         else rt.guideStep=(rt.guideStep||0)+1;
-        rt.helpLevel=0;
-        persist();
-        renderGuidedStep(stage,taskFor(stage),rt);
+        rt.helpLevel=0;persist();renderGuidedStep(stage,taskFor(stage),rt);
       }
     }
     if(status) status.textContent=stage.mode==='final'?'Tua vez. Sem ajuda.':stage.mode==='full'?'Tua vez. Segue o próximo passo do guia.':'Tua vez. Continua a conversa.';

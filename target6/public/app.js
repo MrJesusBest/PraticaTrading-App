@@ -151,16 +151,60 @@ function logHistory(kind, title, result){
   state.history=state.history.slice(0,80);
 }
 
+function ensureListeningV3Styles(){
+  if(document.getElementById('listeningV3Styles'))return;
+  const st=document.createElement('style');
+  st.id='listeningV3Styles';
+  st.textContent=
+    '#listeningCoachPanel{border:0!important;background:linear-gradient(145deg,rgba(16,20,29,.98),rgba(21,27,38,.98))!important;box-shadow:0 18px 55px rgba(0,0,0,.22)}'+
+    '#listeningCoachPanel .exam-cycle-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}'+
+    '#listeningCoachPanel .exam-cycle-steps>div{border:0!important;border-radius:14px!important;padding:14px!important;background:rgba(255,255,255,.045)!important}'+
+    '#listeningCoachPanel .exam-cycle-steps>div:nth-child(1){box-shadow:inset 0 3px 0 #19b97d}'+
+    '#listeningCoachPanel .exam-cycle-steps>div:nth-child(2){box-shadow:inset 0 3px 0 #dda62a}'+
+    '#listeningCoachPanel .exam-cycle-steps>div:nth-child(3){box-shadow:inset 0 3px 0 #df6266}'+
+    '.listening-shell-v3{--listen-accent:#19b97d;--listen-soft:rgba(25,185,125,.10);--listen-line:rgba(25,185,125,.32)}'+
+    '.listening-shell-v3.mode-consolidate{--listen-accent:#dda62a;--listen-soft:rgba(221,166,42,.10);--listen-line:rgba(221,166,42,.34)}'+
+    '.listening-shell-v3.mode-exam{--listen-accent:#df6266;--listen-soft:rgba(223,98,102,.09);--listen-line:rgba(223,98,102,.34)}'+
+    '.listen-mission{padding:18px;border-radius:18px;background:linear-gradient(135deg,var(--listen-soft),rgba(255,255,255,.025));border:1px solid var(--listen-line);margin-bottom:14px}'+
+    '.listen-mission-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.listen-kicker{font-size:.68rem;font-weight:900;letter-spacing:.12em;opacity:.62;margin-bottom:4px}'+
+    '.listen-mission h2{font-size:1.3rem;margin:0}.listen-mode-pill{padding:8px 11px;border-radius:999px;background:var(--listen-accent);color:#06110d;font-weight:900;font-size:.73rem;white-space:nowrap}.mode-exam .listen-mode-pill{color:white}'+
+    '.listen-stage-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.listen-stage-progress>div{height:7px;border-radius:999px;background:rgba(255,255,255,.075)}.listen-stage-progress>div.active,.listen-stage-progress>div.done{background:var(--listen-accent)}'+
+    '.listen-focus-card{padding:20px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid var(--listen-line);box-shadow:0 14px 36px rgba(0,0,0,.13)}'+
+    '.listen-audio-main{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px;border-radius:15px;background:var(--listen-soft);border:1px solid var(--listen-line);margin-bottom:14px}.listen-audio-main button{width:64px;height:64px;border-radius:50%;font-size:1.15rem}'+
+    '.listen-question-label{font-size:.68rem;font-weight:900;letter-spacing:.1em;color:var(--listen-accent);margin-bottom:5px}.listen-question-main{font-size:1.13rem;line-height:1.5;font-weight:800}.listen-question-pt{font-size:.86rem;opacity:.78;margin-top:7px}'+
+    '.listen-choices-v3{display:grid;gap:9px;margin-top:16px}.listen-choice-v3{width:100%;display:flex;align-items:flex-start;gap:11px;text-align:left;padding:13px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035)}'+
+    '.listen-choice-v3:hover{border-color:var(--listen-line);background:var(--listen-soft)}.listen-choice-v3 strong{min-width:22px}.listen-choice-v3.correct{border-color:#19b97d;background:rgba(25,185,125,.12)}.listen-choice-v3.wrong{border-color:#df6266;background:rgba(223,98,102,.11)}'+
+    '.listen-help-box{margin-top:12px;padding:12px;border-radius:12px;background:var(--listen-soft);border:1px solid var(--listen-line)}.listen-action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.listen-action-row button{min-height:44px}'+
+    '.listen-correction{margin-top:15px;padding:18px;border-radius:18px;background:rgba(221,166,42,.09);border:1px solid rgba(221,166,42,.34)}.listen-correction.correct{background:rgba(25,185,125,.09);border-color:rgba(25,185,125,.34)}'+
+    '.listen-critical{padding:13px;border-radius:13px;background:rgba(255,255,255,.045);margin:10px 0}.listen-critical span{display:block;font-size:.68rem;font-weight:900;letter-spacing:.09em;opacity:.62;margin-bottom:5px}'+
+    '.listen-keywords{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.listen-keywords span{padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.055);font-size:.82rem}.listen-review-details{margin-top:10px}.listen-review-details summary{cursor:pointer;font-weight:800}.listen-next-btn{width:100%;margin-top:13px;min-height:48px}'+
+    '@media(max-width:760px){#listeningCoachPanel .exam-cycle-steps{grid-template-columns:1fr}.listen-mission-top{flex-direction:column}.listen-mode-pill{align-self:flex-start}.listen-audio-main{align-items:flex-start}}';
+  document.head.appendChild(st);
+}
+function listeningModeMeta(mode){
+  if(mode==='exam')return {title:'SEM AJUDA',cls:'mode-exam',group:2,subtitle:'Uma reprodução. Sem português, pistas ou ajuda antes de responder.'};
+  if(mode==='consolidate')return {title:'AJUDA MÍNIMA',cls:'mode-consolidate',group:1,subtitle:'Tenta sozinho. Se bloqueares, podes abrir uma pista.'};
+  return {title:'COM AJUDA',cls:'mode-learn',group:0,subtitle:'Aprende o que procurar no áudio e usa português quando precisares.'};
+}
+function listeningSkillLabel(skill){
+  return ({detail:'detalhe',purpose:'intenção',inference:'inferência',number_time:'números / horas',attitude:'atitude'})[skill]||String(skill||'compreensão');
+}
+function listeningStageProgress(mode){
+  const g=mode==='exam'?2:mode==='consolidate'?1:0;
+  return '<div class="listen-stage-progress">'+[0,1,2].map(i=>'<div class="'+(i<g?'done':i===g?'active':'')+'"></div>').join('')+'</div>';
+}
+
 async function generateListening(opts={}){
+  ensureListeningV3Styles();
   const button=opts.button || $('#generateListening');
-  const difficulty=opts.difficulty || $('#listeningDifficulty').value;
+  const difficulty=opts.difficulty || $('#listeningDifficulty')?.value || 'B1';
   const supportMode=opts.supportMode || $('#listeningSupportMode')?.value || 'learn';
   setBusy(button,true,'A criar exercício…');
   try{
     const {item}=await api('/api/generate-listening',{difficulty,focus:opts.focus||'general'});
-    currentListening={...item,answered:false,plays:0,assisted:false,supportMode,examMode:Boolean(opts.examMode || supportMode==='exam'),diagnostic:Boolean(opts.diagnostic)};
-    renderListening(currentListening, opts.workspace || $('#listeningWorkspace'), opts.onAnswered);
-    $('#listeningDifficultyBadge').textContent=difficulty;
+    currentListening={...item,answered:false,plays:0,assisted:supportMode!=='exam',supportMode,examMode:Boolean(opts.examMode||supportMode==='exam'),diagnostic:Boolean(opts.diagnostic),coachReview:null,chosenIndex:null,hintLevel:0};
+    renderListening(currentListening,opts.workspace||$('#listeningWorkspace'),opts.onAnswered);
+    if($('#listeningDifficultyBadge'))$('#listeningDifficultyBadge').textContent=difficulty;
   }catch(e){toast(friendlyError(e),'error')}
   finally{setBusy(button,false)}
 }
@@ -229,57 +273,89 @@ async function replayStudyAudio(item,btn){
 }
 
 function renderListeningReview(item,workspace,correct){
-  const feedback=$('#listenFeedback',workspace); if(!feedback)return;
+  const feedback=$('#listenFeedback',workspace);if(!feedback)return;
   const turns=Array.isArray(item.turns)&&item.turns.length?item.turns:[{speaker:'neutral',text:item.script||'',pt:item.scriptPt||''}];
-  const choicesPt=Array.isArray(item.choicesPt)?item.choicesPt:[];
-  feedback.innerHTML=`<div class="feedback study-review">
-    <div class="panel-head"><h3>${correct?'✓ Correto':'✗ Vamos perceber o erro'}</h3><span class="badge ${item.assisted?'neutral':''}">${item.assisted?'ASSISTIDO':'REVISÃO'}</span></div>
-    ${item.assisted?'<div class="assisted-note">Usaste ajuda antes de responder. Esta tentativa fica guardada, mas não entra na readiness.</div>':''}
-    <p><strong>Explicação:</strong> ${escapeHtml(item.explanationPt||'')}</p>
-    <div class="review-section"><div class="review-title">1 · ÁUDIO — francês + tradução</div><button class="secondary-btn compact" id="reviewReplay">▶ Ouvir diálogo novamente</button><div class="turn-review">
-      ${turns.map((t,i)=>`<div class="turn-review-row"><button class="mini-audio review-turn-audio" data-i="${i}">🔊</button><div><strong>${t.speaker==='woman'?'Mulher':t.speaker==='man'?'Homem':'Voz'}:</strong> <span lang="fr">${escapeHtml(t.text)}</span>${t.pronunciationPt?`<small class="pronunciation-cue"><b>Lê assim:</b> ${escapeHtml(t.pronunciationPt)}</small>`:''}<small>${escapeHtml(t.pt||'')}</small></div></div>`).join('')}
-    </div></div>
-    <div class="review-section"><div class="review-title">2 · PERGUNTA</div><div class="study-line"><button class="mini-audio" id="reviewQuestionAudio">🔊</button><div><span lang="fr">${escapeHtml(item.question)}</span>${item.questionPronunciationPt?`<small class="pronunciation-cue"><b>Lê assim:</b> ${escapeHtml(item.questionPronunciationPt)}</small>`:''}<small>${escapeHtml(item.questionPt||'')}</small></div></div></div>
-    <div class="review-section"><div class="review-title">3 · RESPOSTAS</div><div class="answer-study-list">${item.choices.map((c,i)=>`<div class="answer-study ${i===item.answerIndex?'answer-correct':''}"><button class="mini-audio review-choice-audio" data-i="${i}">🔊</button><div><strong>${String.fromCharCode(65+i)}.</strong> <span lang="fr">${escapeHtml(c)}</span>${Array.isArray(item.choicesPronunciationPt)&&item.choicesPronunciationPt[i]?`<small class="pronunciation-cue"><b>Lê assim:</b> ${escapeHtml(item.choicesPronunciationPt[i])}</small>`:''}<small>${escapeHtml(choicesPt[i]||'')}</small></div></div>`).join('')}</div></div>
-    <div class="review-section"><div class="review-title">4 · VOCABULÁRIO ÚTIL</div><div class="vocab-chips">${(item.vocab||[]).map(v=>`<span class="vocab-chip"><b>${escapeHtml(v.fr)}</b> · ${escapeHtml(v.pt)}</span>`).join('')}</div></div>
-  </div>`;
-  $('#reviewReplay',feedback).onclick=()=>replayStudyAudio(item,$('#reviewReplay',feedback));
+  const review=item.coachReview||{};
+  const idx=Math.max(0,Math.min(turns.length-1,Number(review.criticalTurnIndex)||0));
+  const critical=turns[idx]||turns[0]||{};
+  const keywords=Array.isArray(review.keywords)&&review.keywords.length?review.keywords:(item.vocab||[]).slice(0,3);
+  feedback.innerHTML='<div class="listen-correction '+(correct?'correct':'')+'">'+
+    '<div class="listen-kicker">'+(correct?'CERTO':'CORREÇÃO RÁPIDA')+'</div>'+
+    '<h3>'+(correct?'Boa. Identificaste a informação certa.':'Vamos atacar exatamente o que te fez falhar.')+'</h3>'+
+    (!correct?'<div class="listen-critical"><span>O QUE TINHAS DE OUVIR</span><strong>'+escapeHtml(review.focusPt||item.explanationPt||'Identificar a informação que distingue a resposta correta.')+'</strong></div>':'')+
+    (!correct&&critical?.text?'<div class="listen-critical"><span>TRECHO DECISIVO</span><strong lang="fr">'+escapeHtml(critical.text)+'</strong>'+(critical.pt?'<small>'+escapeHtml(critical.pt)+'</small>':'')+'<div class="listen-action-row"><button id="listenCriticalReplay" class="secondary-btn compact">▶ OUVIR SÓ ESTE TRECHO</button></div></div>':'')+
+    (!correct&&keywords.length?'<div class="listen-keywords">'+keywords.map(v=>'<span><b>'+escapeHtml(v.fr||'')+'</b> · '+escapeHtml(v.pt||'')+'</span>').join('')+'</div>':'')+
+    '<p><strong>'+(!correct?'Porque falhou:':'Explicação:')+'</strong> '+escapeHtml(review.whyPt||item.explanationPt||'')+'</p>'+
+    (!correct&&review.listenAgainPt?'<p><strong>Na repetição:</strong> '+escapeHtml(review.listenAgainPt)+'</p>':'')+
+    '<details class="listen-review-details"><summary>Ver transcrição, tradução e respostas</summary><div>'+
+      '<div class="turn-review">'+turns.map((t,i)=>'<div class="turn-review-row"><button class="mini-audio review-turn-audio" data-i="'+i+'">🔊</button><div><strong>'+(t.speaker==='woman'?'Mulher':t.speaker==='man'?'Homem':'Voz')+':</strong> <span lang="fr">'+escapeHtml(t.text||'')+'</span>'+(t.pt?'<small>'+escapeHtml(t.pt)+'</small>':'')+'</div></div>').join('')+'</div>'+
+      '<div class="answer-study-list">'+item.choices.map((c,i)=>'<div class="answer-study '+(i===item.answerIndex?'answer-correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> <span lang="fr">'+escapeHtml(c)+'</span><small>'+escapeHtml((item.choicesPt||[])[i]||'')+'</small></div>').join('')+'</div>'+
+    '</div></details>'+
+    ((!item.diagnostic&&!item.mock)?'<button id="listenNextSimilar" class="primary-btn listen-next-btn">'+(correct?'PRÓXIMA PERGUNTA':'NOVA PERGUNTA PARECIDA')+'</button>':'')+
+  '</div>';
+  if($('#listenCriticalReplay',feedback))$('#listenCriticalReplay',feedback).onclick=()=>playStudyPhrase(critical.text,critical.speaker||'neutral',$('#listenCriticalReplay',feedback));
   $$('.review-turn-audio',feedback).forEach(b=>{const t=turns[Number(b.dataset.i)];b.onclick=()=>playStudyPhrase(t.text,t.speaker,b)});
-  $('#reviewQuestionAudio',feedback).onclick=()=>playStudyPhrase(item.question,'neutral',$('#reviewQuestionAudio',feedback));
-  $$('.review-choice-audio',feedback).forEach(b=>{const i=Number(b.dataset.i);b.onclick=()=>playStudyPhrase(item.choices[i],'neutral',b)});
+  if($('#listenNextSimilar',feedback))$('#listenNextSimilar',feedback).onclick=e=>generateListening({button:e.currentTarget,difficulty:item.difficulty||$('#listeningDifficulty')?.value||'B1',supportMode:item.supportMode||'learn',examMode:item.supportMode==='exam',focus:item.skillTag||review.transferFocus||'general'});
 }
 
-function renderListening(item, workspace=$('#listeningWorkspace'), onAnswered){
+function renderListening(item,workspace=$('#listeningWorkspace'),onAnswered){
+  ensureListeningV3Styles();
   workspace.classList.remove('empty-state');
-  const allowAssist=item.supportMode==='learn'&&!item.diagnostic&&!item.mock&&!item.examMode;
-  const allowWordAudio=allowAssist;
-  const choiceRows=item.choices.map((c,i)=>allowWordAudio
-    ? `<div class="choice-row"><button class="choice" data-i="${i}"><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(c)}</button><button class="mini-audio pre-choice-audio" data-i="${i}">🔊</button></div>`
-    : `<button class="choice" data-i="${i}"><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(c)}</button>`).join('');
-  workspace.innerHTML=`<div class="panel-head"><h3>${escapeHtml(item.title)}</h3><span class="badge">${escapeHtml(item.difficulty)} · ${escapeHtml(item.skillTag)}</span></div>
-    <div class="inline-help"><span class="help-title">O QUE FAZER NESTA QUESTÃO</span><strong>1.</strong> Clica ▶ e ouve. <strong>2.</strong> Lê a pergunta. <strong>3.</strong> Escolhe A, B, C ou D. ${item.examMode?'<strong>Não podes repetir o áudio.</strong>':'No treino podes repetir.'}</div>
-    <div class="audio-box"><div><strong>Écoutez le document.</strong><br><small><strong>Em português:</strong> Ouve o áudio. · ${item.audioType==='dialogue'?'Diálogo com 2 vozes e pausas naturais. · ':''}${item.examMode?'Uma única reprodução.':'Modo treino: podes repetir.'} · Voz gerada por AI.</small></div><button class="audio-btn" id="listenPlay">▶</button></div>
-    <div class="question-row"><div class="question">${escapeHtml(item.question)}</div>${allowWordAudio?'<button class="mini-audio" id="preQuestionAudio">🔊</button>':''}</div>
-    <div class="choices">${choiceRows}</div>
-    ${allowAssist?`<div class="assist-zone"><button id="showPtHelp" class="secondary-btn compact">Preciso de ajuda PT</button><div id="ptHelp" class="assist-content hidden"><strong>Ajuda usada — esta questão não contará para readiness.</strong><p>${escapeHtml(item.questionPt||'')}</p><ol>${item.choices.map((c,i)=>`<li>${escapeHtml((item.choicesPt||[])[i]||'')}</li>`).join('')}</ol><small>A tradução do diálogo aparece depois de responder.</small></div></div>`:''}
-    <div id="listenFeedback"></div>`;
+  const effectiveMode=item.examMode?'exam':(item.supportMode||'learn');
+  const mode=listeningModeMeta(effectiveMode);
+  const allowHelp=!item.diagnostic&&!item.mock&&!item.examMode;
+  const showPt=item.supportMode==='learn';
+  workspace.className='panel exercise-panel listening-shell-v3 '+mode.cls;
+  workspace.innerHTML='<div class="listen-mission"><div class="listen-mission-top"><div><div class="listen-kicker">TEF AI COACH · LISTENING</div><h2>'+escapeHtml(item.title||'Compréhension orale')+'</h2><small>'+escapeHtml(item.difficulty)+' · '+escapeHtml(listeningSkillLabel(item.skillTag))+'</small></div><div class="listen-mode-pill">'+mode.title+'</div></div><p>'+escapeHtml(mode.subtitle)+'</p>'+listeningStageProgress(effectiveMode)+'</div>'+
+    '<div class="listen-focus-card">'+
+      '<div class="listen-audio-main"><div><div class="listen-kicker">1 · OUVE</div><strong>'+(item.audioType==='dialogue'?'Diálogo':'Áudio')+'</strong><br><small>'+(item.examMode?'Toca uma vez.':'Podes repetir durante o treino.')+'</small></div><button class="audio-btn" id="listenPlay">▶</button></div>'+
+      '<div class="listen-question-label">2 · O QUE TENS DE DESCOBRIR</div><div class="listen-question-main" lang="fr">'+escapeHtml(item.question)+'</div>'+
+      (showPt?'<div class="listen-question-pt">'+escapeHtml(item.questionPt||'')+'</div>':'')+
+      '<div class="listen-choices-v3">'+item.choices.map((c,i)=>'<button class="listen-choice-v3 choice" data-i="'+i+'"><strong>'+String.fromCharCode(65+i)+'.</strong><span lang="fr">'+escapeHtml(c)+'</span></button>').join('')+'</div>'+
+      (allowHelp?'<div class="listen-action-row"><button id="listenHintBtn" class="secondary-btn">'+(item.supportMode==='learn'?'AJUDA PT':'PISTA')+'</button></div><div id="listenHintBox"></div>':'')+
+      '<div id="listenFeedback"></div></div>';
   $('#listenPlay',workspace).onclick=()=>playListening(item,$('#listenPlay',workspace));
   $$('.choice',workspace).forEach(btn=>btn.onclick=()=>answerListening(item,Number(btn.dataset.i),workspace,onAnswered));
-  if(allowWordAudio){
-    $('#preQuestionAudio',workspace).onclick=()=>playStudyPhrase(item.question,'neutral',$('#preQuestionAudio',workspace));
-    $$('.pre-choice-audio',workspace).forEach(b=>{const i=Number(b.dataset.i);b.onclick=()=>playStudyPhrase(item.choices[i],'neutral',b)});
-  }
-  if(allowAssist){ $('#showPtHelp',workspace).onclick=()=>{ item.assisted=true; $('#ptHelp',workspace).classList.remove('hidden'); $('#showPtHelp',workspace).disabled=true; $('#showPtHelp',workspace).textContent='Ajuda PT ativada'; }; }
+  if($('#listenHintBtn',workspace))$('#listenHintBtn',workspace).onclick=()=>{
+    item.assisted=true;item.hintLevel=(item.hintLevel||0)+1;
+    const box=$('#listenHintBox',workspace);
+    if(item.supportMode==='learn'){
+      box.innerHTML='<div class="listen-help-box"><strong>Ajuda em português</strong><p>'+escapeHtml(item.questionPt||'')+'</p><div class="listen-keywords">'+(item.vocab||[]).slice(0,3).map(v=>'<span><b>'+escapeHtml(v.fr||'')+'</b> · '+escapeHtml(v.pt||'')+'</span>').join('')+'</div></div>';
+      $('#listenHintBtn',workspace).disabled=true;$('#listenHintBtn',workspace).textContent='AJUDA ATIVA';
+    }else{
+      const vocab=(item.vocab||[])[0];
+      box.innerHTML='<div class="listen-help-box"><strong>Pista '+Math.min(item.hintLevel,2)+'/2</strong><p>'+(item.hintLevel===1?'Procura no áudio a informação necessária para: '+escapeHtml(item.questionPt||item.question):vocab?'<b>'+escapeHtml(vocab.fr)+'</b> significa '+escapeHtml(vocab.pt):'Volta a ouvir e elimina as opções que contradizem diretamente o áudio.')+'</p></div>';
+      if(item.hintLevel>=2)$('#listenHintBtn',workspace).disabled=true;
+    }
+  };
 }
 
-function answerListening(item, chosen, workspace, onAnswered){
-  if(item.answered)return; item.answered=true;
+async function answerListening(item,chosen,workspace,onAnswered){
+  if(item.answered)return;
+  item.answered=true;item.chosenIndex=chosen;
   const correct=chosen===item.answerIndex;
   $$('.choice',workspace).forEach((b,i)=>{b.disabled=true;if(i===item.answerIndex)b.classList.add('correct');else if(i===chosen)b.classList.add('wrong')});
   const attempt={correct,assisted:Boolean(item.assisted),difficulty:item.difficulty,skillTag:item.skillTag,at:new Date().toISOString(),diagnostic:item.diagnostic};
-  state.listeningAttempts.push(attempt); addVocab(item.vocab||[]); logHistory('Listening',`${item.difficulty} · ${item.skillTag}`,`${correct?'Correto':'Errado'}${item.assisted?' · assistido':''}`);
+  state.listeningAttempts.push(attempt);addVocab(item.vocab||[]);logHistory('Listening',item.difficulty+' · '+item.skillTag,(correct?'Correto':'Errado')+(item.assisted?' · assistido':''));
+  if(!correct&&!item.suppressFeedback){
+    const feedback=$('#listenFeedback',workspace);
+    if(feedback)feedback.innerHTML='<div class="listen-correction"><span class="loader"></span><strong> A AI está a identificar exatamente o trecho que te enganou…</strong></div>';
+    try{
+      const coachItem={
+        turns:item.turns,script:item.script,scriptPt:item.scriptPt,
+        question:item.question,questionPt:item.questionPt,
+        choices:item.choices,choicesPt:item.choicesPt,
+        answerIndex:item.answerIndex,skillTag:item.skillTag,
+        explanationPt:item.explanationPt,vocab:item.vocab
+      };
+      const out=await api('/api/listening-coach-review',{item:coachItem,chosenIndex:chosen});
+      item.coachReview=out.review||null;
+      if(item.coachReview?.keywords?.length)addVocab(item.coachReview.keywords.map(v=>({...v,source:'listening-ai-coach'})));
+    }catch{}
+  }
   if(!item.suppressFeedback)renderListeningReview(item,workspace,correct);
-  saveState(); if(onAnswered)onAnswered(correct,item,workspace);
+  saveState();
+  if(onAnswered)onAnswered(correct,item,workspace);
 }
 
 $('#generateListening').addEventListener('click',()=>{ const supportMode=$('#listeningSupportMode')?.value || 'learn'; generateListening({supportMode,examMode:supportMode==='exam'}); });

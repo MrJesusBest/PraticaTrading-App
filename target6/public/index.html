@@ -145,53 +145,62 @@
 
       <section id="page-listening" class="page">
         <div class="quick-guide">
-          <div class="guide-head"><span>COMO FAZER LISTENING</span><strong>Ouve → identifica a informação → responde.</strong></div>
+          <div class="guide-head"><span>TEF AI COACH · LISTENING</span><strong>Ouve → percebe o ponto-chave → responde → corrige exatamente o que falhou.</strong></div>
           <div class="guide-steps">
-            <div><b>1</b><span>Clica <strong>Gerar exercício</strong>.</span></div>
-            <div><b>2</b><span>Clica ▶ para ouvir o áudio em francês.</span></div>
-            <div><b>3</b><span>Lê a pergunta e escolhe <strong>A, B, C ou D</strong>.</span></div>
-            <div><b>4</b><span>Lê a correção em português e ouve frases individuais.</span></div>
+            <div><b>1</b><span><strong>COM AJUDA</strong> · verde · pergunta em PT + ajuda disponível.</span></div>
+            <div><b>2</b><span><strong>AJUDA MÍNIMA</strong> · âmbar · tenta sozinho e abre uma pista se precisares.</span></div>
+            <div><b>3</b><span><strong>SEM AJUDA</strong> · vermelho · uma reprodução, sem pistas antes de responder.</span></div>
           </div>
-          <div class="guide-tip"><strong>Progressão:</strong> começa em <strong>APRENDER</strong>. Tenta sozinho; se precisares usa Ajuda PT. Depois passa para <strong>CONSOLIDAR</strong> e finalmente <strong>EXAME</strong>. “Écoutez le document” significa <strong>“Ouve o áudio”</strong>.</div>
+          <div class="guide-tip"><strong>Se errares:</strong> a AI identifica o trecho decisivo, explica o que tinhas de ouvir e gera uma nova pergunta semelhante para consolidar.</div>
         </div>
-        <div class="grid-2 top-grid">
-          <div class="panel">
-            <div class="panel-head"><h3>Treino adaptativo</h3><span id="listeningDifficultyBadge" class="badge">B1</span></div>
-            <p>O áudio toca uma vez no modo exame. No modo treino podes repetir.</p>
-            <div class="controls-row">
-              <label>Dificuldade
-                <select id="listeningDifficulty">
-                  <option>A2</option><option selected>B1</option><option>B2</option>
-                </select>
-              </label>
-              <label>Modo de áudio
+
+        <div id="listeningCoachPanel" class="panel exam-cycle-panel">
+          <div class="panel-head">
+            <div>
+              <div class="small-label">CAMINHO PRINCIPAL · LISTENING AI COACH</div>
+              <h3>O mesmo sistema simples do Speaking, adaptado ao áudio</h3>
+            </div>
+            <span id="listeningDifficultyBadge" class="badge">B1</span>
+          </div>
+          <p>Escolhe o nível de ajuda e começa. O ecrã seguinte mostra apenas o áudio, o que tens de descobrir e as quatro opções.</p>
+          <div class="exam-cycle-steps">
+            <div><b>1</b><span><strong>COM AJUDA</strong><small>verde · tradução da pergunta + ajuda PT</small></span></div>
+            <div><b>2</b><span><strong>AJUDA MÍNIMA</strong><small>âmbar · só pistas se bloqueares</small></span></div>
+            <div><b>3</b><span><strong>SEM AJUDA</strong><small>vermelho · formato de simulação</small></span></div>
+          </div>
+          <div class="cycle-controls">
+            <label>Dificuldade
+              <select id="listeningDifficulty"><option>A2</option><option selected>B1</option><option>B2</option></select>
+            </label>
+            <label>Modo
+              <select id="listeningSupportMode">
+                <option value="learn" selected>COM AJUDA</option>
+                <option value="consolidate">AJUDA MÍNIMA</option>
+                <option value="exam">SEM AJUDA</option>
+              </select>
+            </label>
+            <button id="generateListening" class="primary-btn">COMEÇAR LISTENING DE HOJE</button>
+          </div>
+          <details class="coach-task-toggle">
+            <summary>Opções avançadas</summary>
+            <div class="coach-task-body">
+              <label>Áudio
                 <select id="audioMode">
                   <option value="hq" selected>OpenAI Natural — recomendado</option>
                   <option value="browser">Browser — fallback grátis</option>
                 </select>
               </label>
-              <label>Nível de apoio
-                <select id="listeningSupportMode">
-                  <option value="learn" selected>APRENDER — ajuda PT disponível</option>
-                  <option value="consolidate">CONSOLIDAR — tradução só depois</option>
-                  <option value="exam">EXAME — sem ajuda antes</option>
-                </select>
-              </label>
+              <div class="cal-row"><span>NCLC 5 Listening</span><strong>352–392</strong></div>
+              <div class="cal-row"><span>NCLC 6 Listening</span><strong>393–433</strong></div>
+              <small>A readiness é interna e não converte percentagem de acertos diretamente num score oficial TEF.</small>
             </div>
-            <button id="generateListening" class="primary-btn">Gerar exercício</button>
-          </div>
-          <div class="panel calibration-card">
-            <div class="small-label">ALVOS OFICIAIS TEF / 699</div>
-            <div class="cal-row"><span>NCLC 5 Listening</span><strong>352–392</strong></div>
-            <div class="cal-row"><span>NCLC 6 Listening</span><strong>393–433</strong></div>
-            <small>A prática usa uma readiness interna; percentagem de acertos não é convertida diretamente num score TEF oficial.</small>
-          </div>
+          </details>
         </div>
 
         <div id="listeningWorkspace" class="panel exercise-panel empty-state">
           <div class="empty-icon">▶</div>
-          <h3>Gera o primeiro exercício.</h3>
-          <p>O sistema cria material original em francês, ao estilo do formato TEF.</p>
+          <h3>LISTENING AI COACH</h3>
+          <p>Carrega <strong>COMEÇAR LISTENING DE HOJE</strong>. Depois segue apenas o cartão central.</p>
         </div>
       </section>
 
@@ -367,7 +376,7 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="/app.js?v=20260927-1"></script>
+  <script src="/app.js?v=20261001-2"></script>
   <script src="/speaking-flow-core.js?v=20260927-1"></script>
   <script src="/speaking-v2.js?v=20260927-1"></script>
   <script src="/tef-ai-coach.js?v=20261001-3"></script>

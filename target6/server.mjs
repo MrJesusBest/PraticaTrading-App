@@ -233,6 +233,37 @@ Return JSON ONLY with this exact shape:
 answerIndex must be an integer 0-3. Keep vocab to 2-4 useful items. Keep pronunciationPt fields practical for a Portuguese-speaking beginner: syllable separation is allowed, avoid IPA characters, and preserve important French features such as nasal vowels, liaison and silent final consonants as closely as possible.`;
 }
 
+function listeningCoachReviewPrompt(payload = {}) {
+  const item = payload.item || {};
+  const chosenIndex = Number.isInteger(Number(payload.chosenIndex)) ? Number(payload.chosenIndex) : -1;
+  const turns = Array.isArray(item.turns) ? item.turns : [];
+  return [
+    'You are the TARGET 11 TEF Canada Listening AI Coach.',
+    'The learner answered one ORIGINAL training listening question incorrectly.',
+    'Do not create a new exam score. Explain the listening failure as a short teaching intervention.',
+    'Item: ' + JSON.stringify(item),
+    'Learner chosen index: ' + chosenIndex,
+    '',
+    'Identify the ONE decisive spoken turn that best contains or supports the correct answer.',
+    'Explain exactly what the learner needed to notice, without overexplaining.',
+    'Extract 1-3 short French keywords/phrases from that decisive turn that are genuinely useful.',
+    'The learner is Portuguese-speaking, so all explanations must be in European Portuguese.',
+    '',
+    'Return JSON ONLY:',
+    '{',
+    '  "criticalTurnIndex": 0,',
+    '  "focusPt": "what the learner needed to listen for",',
+    '  "whyPt": "why the correct option follows from the audio and why the chosen option does not",',
+    '  "listenAgainPt": "one concrete instruction for the replay",',
+    '  "keywords": [{"fr":"...","pt":"..."}],',
+    '  "transferFocus": "detail|purpose|inference|number_time|attitude"',
+    '}',
+    '',
+    'criticalTurnIndex must be a valid zero-based index into item.turns when turns exist. If there are no turns, use 0.',
+    'Keep focusPt, whyPt and listenAgainPt concise and practical.'
+  ].join('\n');
+}
+
 function speakingPrompt({ section = 'A', difficulty = 'B1' }) {
   const sectionRule = section === 'A'
     ? 'Section A: the candidate must obtain information by asking relevant questions for about 5 minutes. Create an advertisement/service/event scenario with enough details to explore, but do not give all answers upfront.'
@@ -623,6 +654,22 @@ async function handleApi(req, res, pathname) {
         throw new Error('Generated listening item failed validation');
       }
       return sendJson(res, 200, { item });
+    }
+
+    if (pathname === '/api/listening-coach-review') {
+      const item = body.item || {};
+      const chosenIndex = Number(body.chosenIndex);
+      if (!Array.isArray(item.choices) || !Number.isInteger(Number(item.answerIndex))) {
+        throw new Error('Invalid listening item for coach review');
+      }
+      const text = await openAIResponse(listeningCoachReviewPrompt({ item, chosenIndex }), ROUTINE_MODEL);
+      const review = extractJson(text);
+      const turns = Array.isArray(item.turns) ? item.turns : [];
+      const maxIndex = Math.max(0, turns.length - 1);
+      review.criticalTurnIndex = Math.max(0, Math.min(maxIndex, Number(review.criticalTurnIndex) || 0));
+      if (!Array.isArray(review.keywords)) review.keywords = [];
+      review.keywords = review.keywords.slice(0, 3).filter(x => x && x.fr);
+      return sendJson(res, 200, { review });
     }
 
     if (pathname === '/api/generate-listening-batch') {

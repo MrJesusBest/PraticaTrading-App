@@ -164,7 +164,6 @@
     const status=$('#tefCoachStatus');
     const start=$('#startTefCoach');
     const reset=$('#resetTefCoach');
-    const diff=$('#tefCoachDifficulty');
     if(!status || !start) return;
     if(c.active){
       const st=currentStage();
@@ -178,23 +177,19 @@
       start.textContent='COMEÇAR TREINO TEF DE HOJE';
     }
     if(reset) reset.classList.toggle('hidden', !(c.active || c.completedAt));
-    if(diff){
-      diff.value=c.difficulty || 'B1';
-      diff.disabled=Boolean(c.active);
-    }
   }
 
   async function startNew(){
     const c=fresh();
     c.id='coach_'+Date.now();
     c.active=true;
-    c.difficulty=$('#tefCoachDifficulty')?.value || 'B1';
+    c.difficulty=window.getAdaptiveTrainingDifficulty?.('speaking') || 'B1';
     c.startedAt=new Date().toISOString();
     state.tefAiCoach=c;
     persist();
     const w=workspace();
     w.className='panel exercise-panel sim-loading';
-    w.innerHTML='<span class="loader"></span><strong>A preparar o teu TEF AI COACH · '+escapeHtml(c.difficulty)+'</strong><small>Crio duas tarefas de treino e duas tarefas novas para a prova final.</small>';
+    w.innerHTML='<span class="loader"></span><strong>A preparar o teu TEF AI COACH</strong><small>Nível adaptado automaticamente com base no teu progresso, erros e uso de ajuda.</small>';
     try{
       const out=await api('/api/generate-speaking-cycle',{difficulty:c.difficulty});
       S().package=out.cycle;

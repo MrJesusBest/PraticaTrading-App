@@ -275,7 +275,11 @@ Return JSON ONLY:
     "A":{
       "section":"A","title":"...","promptFr":"...","promptPt":"complete European Portuguese translation",
       "examinerRoleFr":"...","prepTipPt":"very concrete Portuguese guidance",
+      "roadmapPt":"short PT explanation of how the full 5-minute conversation should flow",
       "keyObjectives":["..."],
+      "guidedPlan":[
+        {"phasePt":"...","goalPt":"exact goal for this turn","sayFr":"COMPLETE natural candidate turn, 1-2 sentences","sayPt":"PT meaning","pronunciationPt":"PT-friendly sound cue","listenForPt":"what to listen for in the reply","bridgeFr":"natural reaction/bridge before the next question","bridgePt":"PT meaning","rescueFr":"simpler fallback if the learner freezes"}
+      ],
       "support":[
         {"purposePt":"what this phrase does","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
       ]
@@ -283,7 +287,11 @@ Return JSON ONLY:
     "B":{
       "section":"B","title":"...","promptFr":"...","promptPt":"complete European Portuguese translation",
       "examinerRoleFr":"...","prepTipPt":"very concrete Portuguese guidance",
+      "roadmapPt":"short PT explanation of how the full 10-minute persuasion should flow",
       "keyObjectives":["..."],
+      "guidedPlan":[
+        {"phasePt":"...","goalPt":"exact goal for this turn","sayFr":"COMPLETE natural candidate turn, 1-3 sentences","sayPt":"PT meaning","pronunciationPt":"PT-friendly sound cue","listenForPt":"what objection or idea to listen for","bridgeFr":"natural reaction/bridge before continuing","bridgePt":"PT meaning","rescueFr":"simpler fallback if the learner freezes"}
+      ],
       "support":[
         {"purposePt":"what this phrase does","fr":"...","pt":"...","pronunciationPt":"easy PT-friendly sound cue, no IPA"}
       ]
@@ -299,6 +307,10 @@ Return JSON ONLY:
 }
 
 Requirements:
+- assisted.A.guidedPlan: EXACTLY 9 steps designed to sustain one realistic ~5-minute conversation, not disconnected questions. Cover greeting/purpose, core information, price/cost, date/time, place/logistics, duration/conditions, clarification/follow-up, reservation/next action, polite close. Each step must teach a natural reaction/connector, what to listen for, and a simpler rescue sentence.
+- assisted.B.guidedPlan: EXACTLY 12 steps designed to sustain one realistic ~10-minute persuasion. Cover opening/proposal, clear opinion, reason 1, example, invite reaction, answer objection 1, reason 2, compare alternatives, answer objection 2, practical benefit, final persuasive push, close. Make it one developing argument with natural reactions and thinking-time connectors.
+- Every guidedPlan.sayFr must be a complete candidate turn, not a vocabulary fragment. bridgeFr must help the learner react naturally to the interlocutor before moving on.
+- The guidedPlan is teaching scaffolding only: the AI interlocutor still answers naturally and is not forced into a fixed script.
 - assisted.A.support: 6 useful question/opening/follow-up phrases.
 - assisted.B.support: 8 useful persuasion/argumentation phrases.
 - baselineVocab: exactly 10 high-value reusable phrases: at least 3 Section A question/follow-up structures and at least 5 Section B argumentation/objection/linker structures; avoid topic-specific nouns.
@@ -480,7 +492,7 @@ Return JSON ONLY:
 }`;
 }
 
-function tefCoachTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '', coachMode = 'full' }) {
+function tefCoachTurnPrompt({ section = 'A', task = {}, history = [], candidateText = '', coachMode = 'full', nextGuideStep = null }) {
   const mode = ['full','minimal','final'].includes(String(coachMode)) ? String(coachMode) : 'full';
   const rule = section === 'A'
     ? 'You are the service/provider person in the role-play. Answer the candidate question naturally and briefly. Give only the information a real interlocutor would give. If the question is vague, ask for clarification. Do not take over the candidate role.'
@@ -500,6 +512,7 @@ function tefCoachTurnPrompt({ section = 'A', task = {}, history = [], candidateT
     'Conversation history: ' + JSON.stringify(history),
     'Candidate just said: ' + candidateText,
     'Coach mode: ' + mode + '. ' + support,
+    'Next guided learner step (FULL COACH only): ' + JSON.stringify(nextGuideStep || null),
     '',
     'Act as two coordinated roles in ONE response:',
     '1) the realistic French interlocutor;',
@@ -512,6 +525,7 @@ function tefCoachTurnPrompt({ section = 'A', task = {}, history = [], candidateT
     '- If the transcript looks incomplete, garbled, or plausibly caused by speech recognition, set coach.intervene=false and coach.confidence="low". Do not teach a correction from uncertain transcription.',
     '- Minor article/agreement mistakes that do not damage meaning should normally be left for end-of-section feedback.',
     '- In full mode, medium or high priority intervention is allowed.',
+    '- In full mode, use nextGuideStep to keep the learner moving through one COMPLETE conversation. responseOptions must be contextual full turns that react to your reply and advance that next step; never return disconnected phrase-bank fragments.',
     '- In minimal mode, intervene only for high-priority issues; otherwise let the conversation continue.',
     '- The correction must be short enough to repeat in roughly 15-45 seconds.',
     '- Extract 0-3 useful vocabulary items/phrases from the problem so they can be reviewed later.',

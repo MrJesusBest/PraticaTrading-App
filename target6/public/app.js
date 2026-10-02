@@ -202,7 +202,7 @@ async function generateListening(opts={}){
   setBusy(button,true,'A criar exercício…');
   try{
     const {item}=await api('/api/generate-listening',{difficulty,focus:opts.focus||'general'});
-    currentListening={...item,answered:false,plays:0,assisted:supportMode==='learn',supportMode,examMode:Boolean(opts.examMode||supportMode==='exam'),diagnostic:Boolean(opts.diagnostic),coachReview:null,chosenIndex:null,hintLevel:0};
+    currentListening={...item,answered:false,plays:0,assisted:supportMode!=='exam',supportMode,examMode:Boolean(opts.examMode||supportMode==='exam'),diagnostic:Boolean(opts.diagnostic),coachReview:null,chosenIndex:null,hintLevel:0};
     renderListening(currentListening,opts.workspace||$('#listeningWorkspace'),opts.onAnswered);
     if($('#listeningDifficultyBadge'))$('#listeningDifficultyBadge').textContent=difficulty;
   }catch(e){toast(friendlyError(e),'error')}
@@ -340,7 +340,14 @@ async function answerListening(item,chosen,workspace,onAnswered){
     const feedback=$('#listenFeedback',workspace);
     if(feedback)feedback.innerHTML='<div class="listen-correction"><span class="loader"></span><strong> A AI está a identificar exatamente o trecho que te enganou…</strong></div>';
     try{
-      const out=await api('/api/listening-coach-review',{item,chosenIndex:chosen});
+      const coachItem={
+        turns:item.turns,script:item.script,scriptPt:item.scriptPt,
+        question:item.question,questionPt:item.questionPt,
+        choices:item.choices,choicesPt:item.choicesPt,
+        answerIndex:item.answerIndex,skillTag:item.skillTag,
+        explanationPt:item.explanationPt,vocab:item.vocab
+      };
+      const out=await api('/api/listening-coach-review',{item:coachItem,chosenIndex:chosen});
       item.coachReview=out.review||null;
       if(item.coachReview?.keywords?.length)addVocab(item.coachReview.keywords.map(v=>({...v,source:'listening-ai-coach'})));
     }catch{}

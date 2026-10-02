@@ -109,6 +109,56 @@ function readiness(){
   if(state.speakingAttempts.filter(x=>!x.assisted).length<2) score=Math.min(score,58);
   return Math.max(0,Math.min(100,score));
 }
+
+function localDaysUntilExam(){
+  const raw=String(state.settings?.examDate||'').trim();
+  if(!raw)return null;
+  const target=new Date(raw+'T12:00:00');
+  const now=new Date(); now.setHours(12,0,0,0);
+  if(Number.isNaN(target.getTime()))return null;
+  return Math.ceil((target-now)/86400000);
+}
+function averageNumber(values=[]){
+  const nums=values.map(Number).filter(Number.isFinite);
+  return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:null;
+}
+function adaptiveTrainingDifficulty(kind='listening'){
+  const days=localDaysUntilExam();
+  if(kind==='speaking'){
+    const recent=state.speakingAttempts.filter(x=>!x.diagnostic&&!x.mock).slice(-10);
+    const finals=recent.filter(x=>!x.assisted).slice(-4);
+    const avgAll=averageNumber(recent.map(x=>x.overall));
+    const avgFinal=averageNumber(finals.map(x=>x.overall));
+    const signal=avgFinal ?? avgAll;
+    const coach=state.tefAiCoach||{};
+    const turnCount=Object.values(coach.interactions||{}).reduce((n,x)=>n+(Array.isArray(x?.candidateTurns)?x.candidateTurns.length:0),0);
+    const helpRate=turnCount?Math.min(1,(Number(coach.helpTaps)||0)/turnCount):0;
+    const unresolved=Array.isArray(coach.mistakes)?coach.mistakes.filter(x=>!x.mastered).length:0;
+    if(signal==null)return 'B1';
+    if(signal<55 || (helpRate>=.5 && signal<68))return 'A2';
+    if(finals.length>=2 && avgFinal>=80 && unresolved<=2 && helpRate<.3)return 'B2';
+    if(days!=null && days<=14 && signal>=55)return 'B1';
+    return signal<62?'A2':'B1';
+  }
+
+  const recent=state.listeningAttempts.filter(x=>!x.diagnostic&&!x.mock).slice(-12);
+  const exam=recent.filter(x=>!x.assisted).slice(-8);
+  const pool=exam.length>=3?exam:recent;
+  let accuracy=pool.length?pool.filter(x=>x.correct).length/pool.length*100:null;
+  if(accuracy==null && Number(state.diagnostic?.total)>0){
+    accuracy=Number(state.diagnostic.correct||0)/Number(state.diagnostic.total)*100;
+  }
+  const helpKnown=recent.filter(x=>typeof x.helpUsed==='boolean');
+  const helpRate=helpKnown.length?helpKnown.filter(x=>x.helpUsed).length/helpKnown.length:0;
+  const examAccuracy=exam.length?exam.filter(x=>x.correct).length/exam.length*100:null;
+  if(accuracy==null)return 'B1';
+  if(accuracy<55 || (helpRate>=.5 && accuracy<70))return 'A2';
+  if(exam.length>=4 && examAccuracy>=82 && helpRate<.3)return 'B2';
+  if(days!=null && days<=14 && accuracy>=55)return 'B1';
+  return accuracy<62?'A2':'B1';
+}
+window.getAdaptiveTrainingDifficulty=adaptiveTrainingDifficulty;
+
 function nextActionInfo(){
   if(!state.diagnostic.completed) return {page:'diagnostic',text:'Faz o diagnóstico inicial para o sistema descobrir onde deves concentrar o estudo.'};
   const l=listeningAccuracy() ?? 0, s=speakingAverage() ?? 0;
@@ -197,14 +247,13 @@ function listeningStageProgress(mode){
 async function generateListening(opts={}){
   ensureListeningV3Styles();
   const button=opts.button || $('#generateListening');
-  const difficulty=opts.difficulty || $('#listeningDifficulty')?.value || 'B1';
+  const difficulty=opts.difficulty || adaptiveTrainingDifficulty('listening');
   const supportMode=opts.supportMode || $('#listeningSupportMode')?.value || 'learn';
   setBusy(button,true,'A criar exercício…');
   try{
     const {item}=await api('/api/generate-listening',{difficulty,focus:opts.focus||'general'});
     currentListening={...item,answered:false,plays:0,assisted:supportMode!=='exam',supportMode,examMode:Boolean(opts.examMode||supportMode==='exam'),diagnostic:Boolean(opts.diagnostic),coachReview:null,chosenIndex:null,hintLevel:0};
     renderListening(currentListening,opts.workspace||$('#listeningWorkspace'),opts.onAnswered);
-    if($('#listeningDifficultyBadge'))$('#listeningDifficultyBadge').textContent=difficulty;
   }catch(e){toast(friendlyError(e),'error')}
   finally{setBusy(button,false)}
 }
@@ -295,7 +344,7 @@ function renderListeningReview(item,workspace,correct){
   '</div>';
   if($('#listenCriticalReplay',feedback))$('#listenCriticalReplay',feedback).onclick=()=>playStudyPhrase(critical.text,critical.speaker||'neutral',$('#listenCriticalReplay',feedback));
   $$('.review-turn-audio',feedback).forEach(b=>{const t=turns[Number(b.dataset.i)];b.onclick=()=>playStudyPhrase(t.text,t.speaker,b)});
-  if($('#listenNextSimilar',feedback))$('#listenNextSimilar',feedback).onclick=e=>generateListening({button:e.currentTarget,difficulty:item.difficulty||$('#listeningDifficulty')?.value||'B1',supportMode:item.supportMode||'learn',examMode:item.supportMode==='exam',focus:item.skillTag||review.transferFocus||'general'});
+  if($('#listenNextSimilar',feedback))$('#listenNextSimilar',feedback).onclick=e=>generateListening({button:e.currentTarget,supportMode:item.supportMode||'learn',examMode:item.supportMode==='exam',focus:item.skillTag||review.transferFocus||'general'});
 }
 
 function renderListening(item,workspace=$('#listeningWorkspace'),onAnswered){
@@ -335,8 +384,8 @@ async function answerListening(item,chosen,workspace,onAnswered){
   item.answered=true;item.chosenIndex=chosen;
   const correct=chosen===item.answerIndex;
   $$('.choice',workspace).forEach((b,i)=>{b.disabled=true;if(i===item.answerIndex)b.classList.add('correct');else if(i===chosen)b.classList.add('wrong')});
-  const attempt={correct,assisted:Boolean(item.assisted),difficulty:item.difficulty,skillTag:item.skillTag,at:new Date().toISOString(),diagnostic:item.diagnostic};
-  state.listeningAttempts.push(attempt);addVocab(item.vocab||[]);logHistory('Listening',item.difficulty+' · '+item.skillTag,(correct?'Correto':'Errado')+(item.assisted?' · assistido':''));
+  const attempt={correct,assisted:Boolean(item.assisted),helpUsed:Boolean(item.hintLevel>0),supportMode:item.supportMode||'learn',difficulty:item.difficulty,skillTag:item.skillTag,at:new Date().toISOString(),diagnostic:item.diagnostic};
+  state.listeningAttempts.push(attempt);addVocab(item.vocab||[]);logHistory('Listening',listeningSkillLabel(item.skillTag),(correct?'Correto':'Errado')+(item.assisted?' · treino':''));
   if(!correct&&!item.suppressFeedback){
     const feedback=$('#listenFeedback',workspace);
     if(feedback)feedback.innerHTML='<div class="listen-correction"><span class="loader"></span><strong> A AI está a identificar exatamente o trecho que te enganou…</strong></div>';
@@ -366,7 +415,7 @@ $$('#speakingSectionSelector .seg').forEach(btn=>btn.onclick=()=>{
 $('#generateSpeaking').addEventListener('click',()=>generateSpeakingTask());
 
 async function generateSpeakingTask(opts={}){
-  const button=opts.button || $('#generateSpeaking'); const section=opts.section||speakingSection; const difficulty=opts.difficulty||$('#speakingDifficulty').value;
+  const button=opts.button || $('#generateSpeaking'); const section=opts.section||speakingSection; const difficulty=opts.difficulty||adaptiveTrainingDifficulty('speaking');
   setBusy(button,true,'A criar tarefa…');
   try{
     const {task}=await api('/api/generate-speaking',{section,difficulty});

@@ -30,7 +30,7 @@ loadEnvFile(path.join(__dirname, '.env.local'));
 let OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').split(/[\r\n\u2028\u2029]/)[0].trim().replace(/^['\"]|['\"]$/g, '');
 const ROUTINE_MODEL = process.env.TEF_ROUTINE_MODEL || 'gpt-5.6-luna';
 const EVALUATION_MODEL = process.env.TEF_EVALUATION_MODEL || 'gpt-5.6-terra';
-const TRANSCRIBE_MODEL = process.env.TEF_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe';
+const TRANSCRIBE_MODEL = process.env.TEF_TRANSCRIBE_MODEL || 'gpt-transcribe';
 const TTS_MODEL = process.env.TEF_TTS_MODEL || 'gpt-4o-mini-tts';
 const TTS_VOICE = process.env.TEF_TTS_VOICE || 'marin';
 const TTS_WOMAN_VOICE = process.env.TEF_TTS_WOMAN_VOICE || 'marin';
@@ -181,25 +181,60 @@ async function listeningToSpeech(body = {}) {
   return clips;
 }
 
+
 async function transcribeAudio(dataUrl) {
   if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY_NOT_CONFIGURED');
-  const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl || '');
+  const m = /^data:([^;]+)(?:;[^,]+)*;base64,(.+)$/.exec(dataUrl || '');
   if (!m) throw new Error('Invalid audio data');
-  const mime = m[1];
+  const mime = String(m[1] || 'audio/webm').toLowerCase();
   const bytes = Buffer.from(m[2], 'base64');
-  const ext = mime.includes('webm') ? 'webm' : mime.includes('mp4') ? 'mp4' : mime.includes('wav') ? 'wav' : 'webm';
-  const form = new FormData();
-  form.append('file', new Blob([bytes], { type: mime }), `tef-response.${ext}`);
-  form.append('model', TRANSCRIBE_MODEL);
-  form.append('language', 'fr');
-  const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}` },
-    body: form,
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data?.error?.message || `Transcription error ${r.status}`);
-  return data.text || '';
+  if (!bytes.length) throw new Error('Recorded audio is empty');
+
+  const ext =
+    mime.includes('webm') ? 'webm' :
+    mime.includes('mp4') ? 'mp4' :
+    mime.includes('m4a') ? 'm4a' :
+    mime.includes('wav') ? 'wav' :
+    mime.includes('mpeg') || mime.includes('mp3') ? 'mp3' :
+    mime.includes('ogg') ? 'ogg' : 'webm';
+
+  const models = [...new Set([
+    TRANSCRIBE_MODEL,
+    'gpt-transcribe',
+    'gpt-4o-mini-transcribe',
+    'whisper-1',
+  ].filter(Boolean))];
+
+  let lastMessage = 'Transcription failed';
+  for (const model of models) {
+    const form = new FormData();
+    form.append('file', new Blob([bytes], { type: mime }), 'tef-response.' + ext);
+    form.append('model', model);
+    form.append('language', 'fr');
+
+    let r;
+    try {
+      r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + OPENAI_API_KEY },
+        body: form,
+      });
+    } catch (err) {
+      lastMessage = err?.message || 'Network error during transcription';
+      console.error('[TEF_TRANSCRIBE] ' + model + ' network failure: ' + lastMessage);
+      continue;
+    }
+
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) return String(data.text || '').trim();
+
+    lastMessage = data?.error?.message || ('Transcription error ' + r.status);
+    console.error('[TEF_TRANSCRIBE] ' + model + ' failed status=' + r.status + ': ' + String(lastMessage).slice(0, 240));
+
+    if ([401, 402, 413].includes(r.status)) break;
+  }
+
+  throw new Error(lastMessage);
 }
 
 function listeningPrompt({ difficulty = 'B1', focus = 'general' }) {

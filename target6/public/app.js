@@ -258,8 +258,8 @@ async function generateListening(opts={}){
   finally{setBusy(button,false)}
 }
 
-function browserSpeak(text, onEnd, preferredRole='neutral'){
-  if(!('speechSynthesis' in window)){toast('Este browser não suporta áudio TTS local. Usa OpenAI Natural.','error');return;}
+function browserSpeak(text, onEnd, preferredRole='neutral', onError=null){
+  if(!('speechSynthesis' in window)) return false;
   const u=new SpeechSynthesisUtterance(text); u.lang='fr-FR'; u.rate=.96; u.pitch=preferredRole==='woman'?1.05:(preferredRole==='man'?0.92:1);
   const voices=speechSynthesis.getVoices().filter(v=>/^fr[-_]/i.test(v.lang) || /French/i.test(v.name));
   const roleVoice=preferredRole==='woman'
@@ -268,7 +268,10 @@ function browserSpeak(text, onEnd, preferredRole='neutral'){
       ? voices.find(v=>/male|thomas|daniel/i.test(v.name))
       : null;
   if(roleVoice || voices[0]) u.voice=roleVoice||voices[0];
-  if(onEnd)u.onend=onEnd; speechSynthesis.speak(u);
+  if(onEnd)u.onend=onEnd;
+  if(onError)u.onerror=onError;
+  speechSynthesis.speak(u);
+  return true;
 }
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -281,15 +284,22 @@ async function playHQClips(clips=[]){
   for(const clip of clips){ await playAudioUrl(clip.audioDataUrl); if(clip.pauseAfterMs)await sleep(clip.pauseAfterMs); }
 }
 async function playBrowserTurns(item){
+  if(!('speechSynthesis' in window)) throw new Error('Voz gratuita do browser indisponível.');
   const turns=Array.isArray(item.turns)&&item.turns.length?item.turns:[{speaker:'neutral',text:item.script||''}];
   speechSynthesis.cancel();
-  for(let i=0;i<turns.length;i++){ await new Promise(resolve=>browserSpeak(turns[i].text,resolve,turns[i].speaker)); if(i<turns.length-1)await sleep(650); }
+  for(let i=0;i<turns.length;i++){
+    await new Promise((resolve,reject)=>{
+      const ok=browserSpeak(turns[i].text,resolve,turns[i].speaker,()=>reject(new Error('Falha na voz do browser')));
+      if(!ok)reject(new Error('Voz gratuita do browser indisponível.'));
+    });
+    if(i<turns.length-1)await sleep(650);
+  }
 }
 
 async function playListening(item, playBtn){
   if(item.examMode && item.plays>=1){toast('No modo diagnóstico/exame, o áudio toca apenas uma vez.','error');return;}
   item.plays++;
-  const mode=(item.diagnostic||item.examMode)?'hq':($('#audioMode')?.value||'hq');
+  const mode=(item.diagnostic||item.examMode||item.mock)?'hq':($('#audioMode')?.value||'browser');
   playBtn.disabled=true; playBtn.textContent='…';
   try{
     if(mode==='hq'){
@@ -302,13 +312,35 @@ async function playListening(item, playBtn){
 
 const studyAudioCache=new Map();
 
-async function playStudyPhrase(text, role='neutral', btn=null){
+async function playBrowserPhrase(text,role='neutral'){
+  const clean=String(text||'').trim();
+  if(!clean || !('speechSynthesis' in window)) throw new Error('Voz gratuita do browser indisponível.');
+  speechSynthesis.cancel();
+  await new Promise((resolve,reject)=>{
+    const ok=browserSpeak(clean,resolve,role,()=>reject(new Error('Falha na voz do browser')));
+    if(!ok)reject(new Error('Voz gratuita do browser indisponível.'));
+  });
+}
+
+async function playStudyPhrase(text, role='neutral', btn=null, opts={}){
   const clean=String(text||'').trim(); if(!clean)return;
-  const key=`${role}|${clean}`; const old=btn?.textContent;
+  const old=btn?.textContent;
   if(btn){btn.disabled=true;btn.textContent='…';}
   try{
+    if(!opts.hq){
+      try{
+        await playBrowserPhrase(clean,role);
+        return;
+      }catch{}
+    }
+    const key=`${role}|${clean}`;
     let url=studyAudioCache.get(key);
-    if(!url){ const voice=role==='man'?'cedar':'marin'; const d=await api('/api/tts',{text:clean,voice,role}); url=d.audioDataUrl; studyAudioCache.set(key,url); }
+    if(!url){
+      const voice=role==='man'?'cedar':'marin';
+      const d=await api('/api/tts',{text:clean,voice,role});
+      url=d.audioDataUrl;
+      studyAudioCache.set(key,url);
+    }
     await playAudioUrl(url);
   }catch(e){toast(friendlyError(e),'error')}
   finally{if(btn){btn.disabled=false;btn.textContent=old||'🔊';}}
@@ -316,8 +348,17 @@ async function playStudyPhrase(text, role='neutral', btn=null){
 
 async function replayStudyAudio(item,btn){
   const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='A reproduzir…';}
-  try{ if(!item.audioClips){ const d=await api('/api/tts-listening',{audioType:item.audioType,turns:item.turns,script:item.script}); item.audioClips=d.clips; } await playHQClips(item.audioClips); }
-  catch(e){toast(friendlyError(e),'error')}
+  try{
+    const mode=(item?.diagnostic||item?.examMode||item?.mock)?'hq':($('#audioMode')?.value||'browser');
+    if(mode==='browser') await playBrowserTurns(item);
+    else {
+      if(!item.audioClips){
+        const d=await api('/api/tts-listening',{audioType:item.audioType,turns:item.turns,script:item.script});
+        item.audioClips=d.clips;
+      }
+      await playHQClips(item.audioClips);
+    }
+  }catch(e){toast(friendlyError(e),'error')}
   finally{if(btn){btn.disabled=false;btn.textContent=old||'▶ Ouvir novamente';}}
 }
 

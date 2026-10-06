@@ -16,6 +16,10 @@
   let recordContext = null;
   let submitting = false;
   let stageClockTimer = null;
+  let browserRecognition = null;
+  let browserRecognitionFinal = '';
+  let browserRecognitionInterim = '';
+  let browserRecognitionStopped = true;
 
   function fresh(){
     return {
@@ -403,6 +407,73 @@
     toast('Não tenho uma pista pronta para esta tarefa.','error');
   }
 
+  function browserRecognitionCtor(){
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function browserTranscriptValue(){
+    const finalText=String(browserRecognitionFinal||'').trim().replace(/\s+/g,' ');
+    const interim=String(browserRecognitionInterim||'').trim().replace(/\s+/g,' ');
+    return finalText || interim;
+  }
+
+  function startBrowserRecognition(){
+    const Ctor=browserRecognitionCtor();
+    browserRecognitionFinal='';
+    browserRecognitionInterim='';
+    browserRecognitionStopped=false;
+    if(!Ctor) return false;
+
+    const rec=new Ctor();
+    browserRecognition=rec;
+    rec.lang='fr-FR';
+    rec.continuous=true;
+    rec.interimResults=true;
+    rec.maxAlternatives=1;
+
+    rec.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const text=String(e.results[i]?.[0]?.transcript||'').trim();
+        if(!text) continue;
+        if(e.results[i].isFinal) browserRecognitionFinal+=(browserRecognitionFinal?' ':'')+text;
+        else interim+=(interim?' ':'')+text;
+      }
+      browserRecognitionInterim=interim;
+    };
+
+    rec.onerror=e=>{
+      if(['not-allowed','service-not-allowed','audio-capture'].includes(String(e.error||''))) browserRecognitionStopped=true;
+    };
+
+    rec.onend=()=>{
+      if(!browserRecognitionStopped && recorder?.state==='recording' && !submitting){
+        setTimeout(()=>{
+          if(!browserRecognitionStopped && recorder?.state==='recording'){
+            try{ rec.start(); }catch{}
+          }
+        },120);
+      }
+    };
+
+    try{ rec.start(); return true; }
+    catch{ browserRecognition=null; browserRecognitionStopped=true; return false; }
+  }
+
+  async function stopBrowserRecognition(){
+    browserRecognitionStopped=true;
+    const rec=browserRecognition;
+    if(rec){
+      try{ rec.stop(); }catch{}
+      await new Promise(resolve=>setTimeout(resolve,180));
+    }
+    const text=browserTranscriptValue();
+    browserRecognition=null;
+    browserRecognitionInterim='';
+    browserRecognitionFinal='';
+    return text;
+  }
+
   async function startRecording(ctx){
     if(submitting || recorder?.state==='recording') return;
     if(!navigator.mediaDevices?.getUserMedia){ toast('Microfone indisponível neste browser.','error'); return; }
@@ -411,9 +482,10 @@
       const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
       recorder=new MediaRecorder(stream,{mimeType:mime});
       chunks=[];
-      recordContext=ctx;
       recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
       recorder.start(250);
+      const browserEco=startBrowserRecognition();
+      recordContext={...ctx,browserEco};
       const start=ctx.type==='turn'?$('#coachTurnStart'):$('#coachCorrectionStart');
       const stop=ctx.type==='turn'?$('#coachTurnStop'):$('#coachCorrectionStop');
       const status=ctx.type==='turn'?$('#coachStatus'):$('#coachCorrectionStatus');
@@ -431,6 +503,7 @@
     submitting=true;
     clearTimeout(hardStopTimer); hardStopTimer=null;
     const ctx=recordContext;
+    const browserText=await stopBrowserRecognition();
     const dataUrl=await new Promise(resolve=>{
       recorder.onstop=()=>{
         const blob=new Blob(chunks,{type:recorder.mimeType});
@@ -445,8 +518,8 @@
     recorder=null;
     chunks=[];
     try{
-      if(ctx?.type==='correction') await handleCorrectionAudio(ctx,dataUrl);
-      else await handleTurnAudio(ctx,dataUrl);
+      if(ctx?.type==='correction') await handleCorrectionAudio(ctx,dataUrl,browserText);
+      else await handleTurnAudio(ctx,dataUrl,browserText);
     }finally{
       submitting=false;
       recordContext=null;
@@ -456,14 +529,20 @@
   function stopMedia(){
     clearTimeout(hardStopTimer); hardStopTimer=null;
     clearInterval(stageClockTimer); stageClockTimer=null;
+    browserRecognitionStopped=true;
+    if(browserRecognition){ try{browserRecognition.abort();}catch{} }
+    browserRecognition=null; browserRecognitionFinal=''; browserRecognitionInterim='';
     if(recorder?.state==='recording'){ try{recorder.stop();}catch{} }
     if(stream){ try{stream.getTracks().forEach(t=>t.stop());}catch{} }
     recorder=null; stream=null; chunks=[]; recordContext=null;
   }
 
-  async function transcribe(dataUrl){
+  async function transcribe(dataUrl,browserText=''){
+    const local=String(browserText||'').trim().replace(/\s+/g,' ');
+    const wordCount=local?local.split(/\s+/).filter(Boolean).length:0;
+    if(local.length>=5 && wordCount>=2) return {text:local,provider:'browser'};
     const out=await api('/api/transcribe',{audioDataUrl:dataUrl});
-    return String(out.transcript||'').trim();
+    return {text:String(out.transcript||'').trim(),provider:String(out.provider||'server')};
   }
 
   function shouldIntervene(stage,coach){
@@ -499,13 +578,14 @@
     return item;
   }
 
-  async function handleTurnAudio(ctx,dataUrl){
+  async function handleTurnAudio(ctx,dataUrl,browserText=''){
     const stage=stages.find(x=>x.id===ctx?.stageId) || currentStage();
     const rt=runtime(stage);
     const status=$('#coachStatus');
     try{
       if(status) status.textContent='A transcrever a tua resposta…';
-      const candidateText=await transcribe(dataUrl);
+      const transcription=await transcribe(dataUrl,browserText);
+      const candidateText=transcription.text;
       if(!candidateText) throw new Error('Não consegui perceber a resposta. Repete o turno.');
       rt.candidateTurns.push(candidateText);
       rt.conversation.push({role:'candidate',text:candidateText});
@@ -582,7 +662,7 @@
     if($('#coachSkipCorrection')) $('#coachSkipCorrection').onclick=()=>skipCorrection(stage,rt);
   }
 
-  async function handleCorrectionAudio(ctx,dataUrl){
+  async function handleCorrectionAudio(ctx,dataUrl,browserText=''){
     const stage=stages.find(x=>x.id===ctx?.stageId) || currentStage();
     const rt=runtime(stage);
     const pending=rt.pending;
@@ -591,7 +671,8 @@
     const status=$('#coachCorrectionStatus');
     try{
       if(status) status.textContent='A verificar a repetição…';
-      const learnerTranscript=await transcribe(dataUrl);
+      const transcription=await transcribe(dataUrl,browserText);
+      const learnerTranscript=transcription.text;
       if(!learnerTranscript) throw new Error('Não consegui perceber a repetição.');
       const out=await api('/api/evaluate-speaking-drill',{
         section:stage.section,

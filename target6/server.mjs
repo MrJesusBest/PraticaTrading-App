@@ -28,6 +28,8 @@ function loadEnvFile(filePath) {
 loadEnvFile(path.join(__dirname, '.env.local'));
 
 let OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').split(/[\r\n\u2028\u2029]/)[0].trim().replace(/^['\"]|['\"]$/g, '');
+const GROQ_API_KEY = String(process.env.GROQ_API_KEY || '').split(/[\r\n\u2028\u2029]/)[0].trim().replace(/^['\"]|['\"]$/g, '');
+const GROQ_TRANSCRIBE_MODEL = process.env.TEF_GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo';
 const ROUTINE_MODEL = process.env.TEF_ROUTINE_MODEL || 'gpt-5.6-luna';
 const EVALUATION_MODEL = process.env.TEF_EVALUATION_MODEL || 'gpt-5.6-terra';
 const TRANSCRIBE_MODEL = process.env.TEF_TRANSCRIBE_MODEL || 'gpt-transcribe';
@@ -182,8 +184,8 @@ async function listeningToSpeech(body = {}) {
 }
 
 
+
 async function transcribeAudio(dataUrl) {
-  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY_NOT_CONFIGURED');
   const m = /^data:([^;]+)(?:;[^,]+)*;base64,(.+)$/.exec(dataUrl || '');
   if (!m) throw new Error('Invalid audio data');
   const mime = String(m[1] || 'audio/webm').toLowerCase();
@@ -198,6 +200,51 @@ async function transcribeAudio(dataUrl) {
     mime.includes('mpeg') || mime.includes('mp3') ? 'mp3' :
     mime.includes('ogg') ? 'ogg' : 'webm';
 
+  async function runProvider({ provider, url, key, model }) {
+    if (!key) return null;
+    const form = new FormData();
+    form.append('file', new Blob([bytes], { type: mime }), 'tef-response.' + ext);
+    form.append('model', model);
+    form.append('language', 'fr');
+
+    let r;
+    try {
+      r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + key },
+        body: form,
+      });
+    } catch (err) {
+      console.error('[TEF_TRANSCRIBE] ' + provider + ' network failure: ' + String(err?.message || err).slice(0, 240));
+      return null;
+    }
+
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) {
+      const text = String(data.text || '').trim();
+      if (text) return { transcript: text, provider };
+      console.error('[TEF_TRANSCRIBE] ' + provider + ' returned empty text');
+      return null;
+    }
+
+    const message = data?.error?.message || ('Transcription error ' + r.status);
+    console.error('[TEF_TRANSCRIBE] ' + provider + ' failed status=' + r.status + ': ' + String(message).slice(0, 240));
+    return { error: message, status: r.status };
+  }
+
+  // ECO chain: Groq first when configured. OpenAI is the paid safety fallback.
+  if (GROQ_API_KEY) {
+    const groq = await runProvider({
+      provider: 'groq',
+      url: 'https://api.groq.com/openai/v1/audio/transcriptions',
+      key: GROQ_API_KEY,
+      model: GROQ_TRANSCRIBE_MODEL,
+    });
+    if (groq?.transcript) return groq;
+  }
+
+  if (!OPENAI_API_KEY) throw new Error('NO_TRANSCRIPTION_PROVIDER_CONFIGURED');
+
   const models = [...new Set([
     TRANSCRIBE_MODEL,
     'gpt-transcribe',
@@ -207,31 +254,15 @@ async function transcribeAudio(dataUrl) {
 
   let lastMessage = 'Transcription failed';
   for (const model of models) {
-    const form = new FormData();
-    form.append('file', new Blob([bytes], { type: mime }), 'tef-response.' + ext);
-    form.append('model', model);
-    form.append('language', 'fr');
-
-    let r;
-    try {
-      r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + OPENAI_API_KEY },
-        body: form,
-      });
-    } catch (err) {
-      lastMessage = err?.message || 'Network error during transcription';
-      console.error('[TEF_TRANSCRIBE] ' + model + ' network failure: ' + lastMessage);
-      continue;
-    }
-
-    const data = await r.json().catch(() => ({}));
-    if (r.ok) return String(data.text || '').trim();
-
-    lastMessage = data?.error?.message || ('Transcription error ' + r.status);
-    console.error('[TEF_TRANSCRIBE] ' + model + ' failed status=' + r.status + ': ' + String(lastMessage).slice(0, 240));
-
-    if ([401, 402, 413].includes(r.status)) break;
+    const openai = await runProvider({
+      provider: 'openai:' + model,
+      url: 'https://api.openai.com/v1/audio/transcriptions',
+      key: OPENAI_API_KEY,
+      model,
+    });
+    if (openai?.transcript) return openai;
+    if (openai?.error) lastMessage = openai.error;
+    if ([401, 402, 413].includes(openai?.status)) break;
   }
 
   throw new Error(lastMessage);
@@ -661,9 +692,12 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, {
       ok: true,
       aiConfigured: Boolean(OPENAI_API_KEY),
+      groqConfigured: Boolean(GROQ_API_KEY),
       routineModel: ROUTINE_MODEL,
       evaluationModel: EVALUATION_MODEL,
       transcribeModel: TRANSCRIBE_MODEL,
+      groqTranscribeModel: GROQ_TRANSCRIBE_MODEL,
+      transcriptionChain: GROQ_API_KEY ? 'browser>groq>openai' : 'browser>openai',
       ttsModel: TTS_MODEL,
     });
   }
@@ -801,8 +835,8 @@ async function handleApi(req, res, pathname) {
     }
 
     if (pathname === '/api/transcribe') {
-      const transcript = await transcribeAudio(body.audioDataUrl);
-      return sendJson(res, 200, { transcript });
+      const result = await transcribeAudio(body.audioDataUrl);
+      return sendJson(res, 200, result);
     }
 
     if (pathname === '/api/evaluate-speaking') {

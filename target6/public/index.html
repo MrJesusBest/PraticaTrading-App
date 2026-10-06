@@ -162,7 +162,7 @@
             </div>
             <span class="badge">NÍVEL AUTO</span>
           </div>
-          <p>Escolhe apenas o nível de ajuda e começa. <strong>A dificuldade é automática.</strong> O ecrã seguinte mostra apenas o áudio, o que tens de descobrir e as quatro opções.</p>
+          <p>Escolhe apenas o nível de ajuda e começa. <strong>A dificuldade e o custo são automáticos.</strong> No treino diário usamos opções grátis primeiro; áudio HQ fica reservado para Mock/HQ.</p>
           <div class="exam-cycle-steps">
             <div><b>1</b><span><strong>COM AJUDA</strong><small>verde · tradução da pergunta + ajuda PT</small></span></div>
             <div><b>2</b><span><strong>AJUDA MÍNIMA</strong><small>âmbar · só pistas se bloqueares</small></span></div>
@@ -184,8 +184,8 @@
             <div class="coach-task-body">
               <label>Áudio
                 <select id="audioMode">
-                  <option value="hq" selected>OpenAI Natural — recomendado</option>
-                  <option value="browser">Browser — fallback grátis</option>
+                  <option value="browser" selected>ECO AUTO — voz do browser grátis</option>
+                  <option value="hq">HQ — OpenAI Natural</option>
                 </select>
               </label>
               <div class="cal-row"><span>NCLC 5 Listening</span><strong>352–392</strong></div>
@@ -221,7 +221,7 @@
             </div>
             <span class="badge">3 ETAPAS</span>
           </div>
-          <p>Um caminho único e visual: <strong>aprendes com ajuda</strong>, repetes com menos apoio e terminas em <strong>modo exame</strong>. A dificuldade é ajustada automaticamente pelo Coach.</p>
+          <p>Um caminho único e visual: <strong>aprendes com ajuda</strong>, repetes com menos apoio e terminas em <strong>modo exame</strong>. O Coach usa reconhecimento/voz grátis primeiro e só recorre ao fallback premium quando necessário.</p>
           <div class="exam-cycle-steps">
             <div><b>1</b><span><strong>COM AJUDA</strong><small>verde · guia completo turno a turno</small></span></div>
             <div><b>2</b><span><strong>AJUDA MÍNIMA</strong><small>âmbar · só pistas quando bloqueias</small></span></div>
@@ -345,7 +345,7 @@
         <div class="grid-2">
           <div class="panel">
             <div class="panel-head"><h3>AI</h3><span id="settingsAIStatus" class="badge neutral">—</span></div>
-            <p>A chave OpenAI fica apenas no servidor local, em <code>.env.local</code>. Nunca é guardada no browser.</p>
+            <p>As chaves dos fornecedores ficam apenas no servidor/Vercel. Nunca são guardadas no browser.</p>
             <div id="modelInfo" class="settings-list"></div>
             <button id="testAI" class="secondary-btn compact">Testar ligação AI</button>
             <div id="testAIResult" class="small-label"></div>
@@ -354,9 +354,10 @@
             <div class="panel-head"><h3>Privacidade</h3><span class="badge neutral">LOCAL</span></div>
             <ul class="check-list">
               <li>Progresso: localStorage no teu browser</li>
-              <li>Chave API: ficheiro local do servidor</li>
+              <li>Chaves API: apenas no servidor/Vercel</li>
               <li>Pedidos AI configurados com <code>store:false</code></li>
-              <li>Áudio só é enviado quando pedes transcrição</li>
+              <li>Speaking tenta reconhecimento do browser primeiro</li>
+              <li>Áudio só sai do browser quando é preciso usar um fallback</li>
             </ul>
           </div>
         </div>
@@ -370,10 +371,10 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="/app.js?v=20261001-4"></script>
+  <script src="/app.js?v=20261006-1"></script>
   <script src="/speaking-flow-core.js?v=20260927-1"></script>
   <script src="/speaking-v2.js?v=20261001-3"></script>
-  <script src="/tef-ai-coach.js?v=20261001-5"></script>
+  <script src="/tef-ai-coach.js?v=20261006-1"></script>
   <script src="/resume-coach.js?v=20260927-1"></script>
   <script src="/ui-feedback.js?v=20260927-1"></script>
 </body>

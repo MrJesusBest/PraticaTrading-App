@@ -732,7 +732,7 @@
     renderConversation(stage,rt);
     const status=$('#coachStatus');
     if(status) status.textContent='Interlocutor a responder…';
-    await playStudyPhrase(turn.replyFr,'man',null,{hq:stage.mode==='final'});
+    await playStudyPhrase(turn.replyFr,'man');
     if(stage.mode==='full'||stage.mode==='minimal'){
       const plan=guidedPlan(taskFor(stage));
       if(plan.length){

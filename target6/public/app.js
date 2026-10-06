@@ -299,7 +299,7 @@ async function playBrowserTurns(item){
 async function playListening(item, playBtn){
   if(item.examMode && item.plays>=1){toast('No modo diagnóstico/exame, o áudio toca apenas uma vez.','error');return;}
   item.plays++;
-  const mode=(item.diagnostic||item.examMode||item.mock)?'hq':($('#audioMode')?.value||'browser');
+  const mode=(item.diagnostic||item.mock)?'hq':($('#audioMode')?.value||'browser');
   playBtn.disabled=true; playBtn.textContent='…';
   try{
     if(mode==='hq'){
@@ -349,7 +349,7 @@ async function playStudyPhrase(text, role='neutral', btn=null, opts={}){
 async function replayStudyAudio(item,btn){
   const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='A reproduzir…';}
   try{
-    const mode=(item?.diagnostic||item?.examMode||item?.mock)?'hq':($('#audioMode')?.value||'browser');
+    const mode=(item?.diagnostic||item?.mock)?'hq':($('#audioMode')?.value||'browser');
     if(mode==='browser') await playBrowserTurns(item);
     else {
       if(!item.audioClips){
@@ -856,7 +856,16 @@ function renderSettings(){
   if(!$('#modelInfo'))return;
   $('#settingsAIStatus').textContent=health?.aiConfigured?'LIGADO':'SEM CHAVE';
   $('#settingsAIStatus').className=`badge ${health?.aiConfigured?'':'neutral'}`;
-  $('#modelInfo').innerHTML=health?`<div><span>Rotina / exercícios</span><code>${escapeHtml(health.routineModel)}</code></div><div><span>Avaliação / plano</span><code>${escapeHtml(health.evaluationModel)}</code></div><div><span>Transcrição</span><code>${escapeHtml(health.transcribeModel)}</code></div><div><span>Áudio HQ</span><code>${escapeHtml(health.ttsModel)}</code></div>`:'<p>A carregar…</p>';
+  const browserSTT=Boolean(window.SpeechRecognition||window.webkitSpeechRecognition);
+  const browserTTS='speechSynthesis' in window;
+  $('#modelInfo').innerHTML=health?`
+    <div><span>Cérebro AI</span><code>${escapeHtml(health.routineModel)}</code></div>
+    <div><span>Voz → texto diário</span><code>${browserSTT?'BROWSER FREE':'FALLBACK SERVER'}</code></div>
+    <div><span>Fallback barato</span><code>${health.groqConfigured?'GROQ ATIVO':'GROQ PRONTO · FALTA CHAVE'}</code></div>
+    <div><span>Fallback segurança</span><code>${escapeHtml(health.transcribeModel||'OpenAI')}</code></div>
+    <div><span>Voz diária</span><code>${browserTTS?'BROWSER FREE':'OPENAI FALLBACK'}</code></div>
+    <div><span>Áudio HQ / Mock</span><code>${escapeHtml(health.ttsModel)}</code></div>
+  `:'<p>A carregar…</p>';
 }
 
 function formatTime(sec){const m=Math.floor(sec/60),s=sec%60;return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
